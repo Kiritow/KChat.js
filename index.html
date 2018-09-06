@@ -1,0 +1,75 @@
+<!DOCTYPE>
+<html>
+<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+<title>K-Chat (Work In Progress)</title>
+<style type="text/css">
+div.scrollable{
+    overflow: scroll;
+    height:70%;
+}
+</style>
+<div>
+    <h1>K-Chat (开发中)</h1>
+    <div class="scrollable" id="chat_bar">
+    </div>
+    <div>
+        <input type="text" id="nickname" placeholder="在此输入你的昵称">
+        <textarea id="msg" placeholder="在此输入文字消息"></textarea>
+        <input id="send_msg" type="button" value="发送">
+    </div>
+    <div>
+        <p>状态: <span id="status_bar">正在连接到服务器...</span> </p>
+    </div>
+    <div>
+        <a href="developer_log.html">开发者日志</a>
+    </div>
+</div>
+<script src="/js/jquery.js"></script>
+<script>
+    function getTime() {
+        return String(new Date())
+    }
+
+    function sendMessage() {
+        if($("#nickname").val()== null || $("#nickname").val()=='') {
+            alert("请填写昵称!")
+            return
+        }
+        console.log("Sending message:"+ $("#msg").val())
+        ws.send($("#nickname").val()+"说: "+$("#msg").val())
+        $("#msg").val('')
+    }
+
+    var ws=new WebSocket("ws://kiritow.com:59505")
+    ws.onopen=function() {
+        console.log("onopen")
+        $("#status_bar").text("已连接到服务器.")
+        console.log("Sending message...")
+        ws.send("某用户加入到了聊天室")
+        console.log("Message sent.")
+    }
+    ws.onclose=function(){
+        console.log("onclose")
+        $("#status_bar").text("连接已关闭.")
+    }
+    ws.onerror=function() {
+        console.log("onerror")
+        $("#status_bar").text("发生错误.")
+    }
+    ws.onmessage=function(ev) {
+        $("#chat_bar").append("<p><font color=blue>"+getTime()+"</font> "+ev.data+"</p>")
+        $("#chat_bar").get(0).scrollTop=$("#chat_bar").get(0).scrollHeight;
+    }
+
+    $("#send_msg").click(function(){
+        sendMessage()
+    })
+
+    $("#msg").on('keypress',function(ev){
+        if(ev.keyCode==13) {
+            sendMessage()
+        }
+    })
+</script>
+
+</html>
