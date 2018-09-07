@@ -4,7 +4,7 @@ html, body {
     color: rgb(102, 102, 102);
     overflow-y: auto;
     background: url("bg_0.png") 0px 0px repeat rgb(78, 83, 89);
-    font-family: 新宋体;
+    font-family: 微软雅黑;
 }
 #container {
     margin:20px auto;
@@ -19,12 +19,12 @@ html, body {
     border-radius: 10px 10px 0px 0px;
     background: #008AFF;
     text-align: center;
-    font-family: 新宋体;
+    font-family: 微软雅黑;
     font-size: 25px;
     color: #f46009;
 }
 .shuru{
-    font-family: 新宋体;
+    font-family: 微软雅黑;
     font-size: 20px;
     color: #008AFF;
     height: 30px;
@@ -36,7 +36,7 @@ html, body {
     padding: 0px 0px 1px 0px ;
     border-radius: 10px;
     background: #008AFF;
-    font-family: 新宋体;
+    font-family: 微软雅黑;
     font-size: 20px;
 }
 
@@ -49,7 +49,7 @@ html, body {
 	overflow: scroll;
 }
 #dd{
-    font-family: 新宋体;
+    font-family: 微软雅黑;
     font-size: 25px;
     width:588px;
     float: right;
