@@ -3,17 +3,23 @@
 <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
 <title>K-Chat (Work In Progress)</title>
 <link rel="stylesheet" href="chatroom.css" type="text/css" />
+<link rel="stylesheet" type="text/css" href="success.css">
 <div>
-    <h1>K-Chat (开发中)</h1>
-    <div class="scrollable" id="chat_bar">
-    </div>
-    <div>
-        <p><input type="text" id="nickname" placeholder="在此输入你的昵称" disabled></p>
-        <p><textarea id="msg" placeholder="在此输入文字消息"></textarea></p>
-        <p><input id="send_msg" type="button" value="发送"> 或 Enter键发送消息</p>
-        <p><input id="change_nickname" type="button" value="修改昵称">
-            <input id="confirm_nickname" type="button" value="确认昵称" hidden>
-        </p>
+    <div id="container">
+        <div id="title">
+        <h1>K-Chat (开发中)</h1>
+        </div>
+        
+        <div class="scrollable" id="chat_bar">
+        </div>
+        <div>
+            <p><input type="text" id="nickname" placeholder="在此输入你的昵称" disabled></p>
+            <p><textarea id="msg" placeholder="在此输入文字消息"></textarea></p>
+            <p><input id="send_msg" type="button" value="发送"> 或 Enter键发送消息</p>
+            <p><input id="change_nickname" type="button" value="修改昵称">
+                <input id="confirm_nickname" type="button" value="确认昵称" hidden>
+            </p>
+        </div>
     </div>
     <div>
         <p>状态: <span id="status_bar">正在连接到服务器...</span> </p>
