@@ -3,16 +3,15 @@
 <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
 <title>K-Chat (Work In Progress)</title>
 <link rel="stylesheet" href="chatroom.css" type="text/css" />
-<link rel="stylesheet" type="text/css" href="success.css">
 <div>
-    <div id="container">
-        <div id="title">
+    <div class="container">
+        <div class="bigtitle">
         <h1>K-Chat (开发中)</h1>
         </div>
         
-        <div class="scrollable" id="chat_bar">
+        <div class="chat_bar" id="chat_bar">
         </div>
-        <div>
+        <div class="chat_container">
             <p><input type="text" id="nickname" placeholder="在此输入你的昵称" disabled></p>
             <p><textarea id="msg" placeholder="在此输入文字消息"></textarea></p>
             <p><input id="send_msg" type="button" value="发送"> 或 Enter键发送消息</p>
@@ -22,7 +21,7 @@
         </div>
     </div>
     <div>
-        <p>状态: <span id="status_bar">正在连接到服务器...</span> </p>
+        <p class="status_bar">状态: <span id="status_bar">正在连接到服务器...</span> </p>
     </div>
     <div>
         <a href="developer_log.html">开发者日志</a>
