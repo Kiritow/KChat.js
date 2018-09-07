@@ -1,15 +1,16 @@
 <!DOCTYPE>
 <html>
+<head>
+ <link rel="stylesheet" type="text/css" href="success.css">
+</head>
 <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
 <title>K-Chat (Work In Progress)</title>
-<style type="text/css">
-div.scrollable{
-    overflow: scroll;
-    height:70%;
-}
-</style>
-<div>
-    <h1>K-Chat (开发中)</h1>
+<div >
+<div id="container">
+	<div id="title">
+	<h1>K-Chat (开发中)</h1>
+	</div>
+    
     <div class="scrollable" id="chat_bar">
     </div>
     <div>
@@ -17,6 +18,7 @@ div.scrollable{
         <textarea id="msg" placeholder="在此输入文字消息"></textarea>
         <input id="send_msg" type="button" value="发送">
     </div>
+</div>
     <div>
         <p>状态: <span id="status_bar">正在连接到服务器...</span> </p>
     </div>

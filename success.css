@@ -1,0 +1,57 @@
+html, body {
+    height: 100%;
+    min-height: 755px;
+    color: rgb(102, 102, 102);
+    overflow-y: auto;
+    background: url("bg_0.png") 0px 0px repeat rgb(78, 83, 89);
+    font-family: 新宋体;
+}
+#container {
+    margin:20px auto;
+    padding: 0px 0 30px 0;
+    border-radius: 10px;
+    background: #dddddd;
+    height:70%;
+}
+#title{
+    margin: 1px auto;
+    padding: 1px 0px ;
+    border-radius: 10px 10px 0px 0px;
+    background: #008AFF;
+    text-align: center;
+    font-family: 新宋体;
+    font-size: 25px;
+    color: #f46009;
+}
+.shuru{
+    font-family: 新宋体;
+    font-size: 20px;
+    color: #008AFF;
+    height: 30px;
+    width: 400px;
+}
+#in{
+    height: 40px;
+    width: 80px;
+    padding: 0px 0px 1px 0px ;
+    border-radius: 10px;
+    background: #008AFF;
+    font-family: 新宋体;
+    font-size: 20px;
+}
+
+#chat_bar{
+    height: 330px;
+    width: 100%;
+    min-height: 200px;
+    overflow-y: auto;
+    background-color: #EFF3F7;
+	overflow: scroll;
+}
+#dd{
+    font-family: 新宋体;
+    font-size: 25px;
+    width:588px;
+    float: right;
+    color:#f60d08;
+}
