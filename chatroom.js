@@ -28,32 +28,50 @@ function getNickname() {
     }
 }
 
-var ws=new WebSocket("ws://localhost:59505")
-ws.onopen=function() {
-    console.log("onopen")
-    $("#status_bar").text("已连接到服务器.")
-    console.log("Sending hello broadcast...")
-    if(getNickname()==null) {
-        ws.send("欢迎新人~!")
-        $("#nickname").removeAttr("disabled")
-    } else {
-        ws.send("欢迎回来,"+getNickname())
-        $("#nickname").val(getNickname())
+var ws
+
+function bindCallback() {
+    ws.onopen=function() {
+        console.log("onopen")
+        $("#status_bar").text("已连接到服务器.")
+        console.log("Sending hello broadcast...")
+        if(getNickname()==null) {
+            ws.send("欢迎新人~!")
+            $("#nickname").removeAttr("disabled")
+        } else {
+            ws.send("欢迎回来,"+getNickname())
+            $("#nickname").val(getNickname())
+        }
+        console.log("hello sent.")
     }
-    console.log("hello sent.")
+    ws.onclose=function(){
+        console.log("onclose")
+        $("#status_bar").text("连接已关闭.")
+    }
+    ws.onerror=function() {
+        console.log("onerror")
+        $("#status_bar").text("发生错误.")
+    }
+    ws.onmessage=function(ev) {
+        $("#chat_bar").append("<p><font color=blue>"+getTime()+"</font> "+ev.data+"</p>")
+        $("#chat_bar").get(0).scrollTop=$("#chat_bar").get(0).scrollHeight;
+    }
 }
-ws.onclose=function(){
-    console.log("onclose")
-    $("#status_bar").text("连接已关闭.")
-}
-ws.onerror=function() {
-    console.log("onerror")
-    $("#status_bar").text("发生错误.")
-}
-ws.onmessage=function(ev) {
-    $("#chat_bar").append("<p><font color=blue>"+getTime()+"</font> "+ev.data+"</p>")
-    $("#chat_bar").get(0).scrollTop=$("#chat_bar").get(0).scrollHeight;
-}
+
+var ws=new WebSocket("ws://kiritow.com:59505")
+bindCallback()
+
+$("#dev_op").click(function(){
+    if($("#dev_op").get(0).checked) {
+        $("#status_bar").text("连接开发者模式服务器中...")
+        ws=new WebSocket("ws://localhost:59505")
+        bindCallback()
+    } else {
+        $("#status_bar").text("连接聊天服务器中...")
+        ws=new WebSocket("ws://kiritow.com:59505")
+        bindCallback()
+    }
+})
 
 function sendMessage() {
     if($("#nickname").val()== null || $("#nickname").val()=='') {
