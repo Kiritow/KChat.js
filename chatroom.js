@@ -64,10 +64,12 @@ bindCallback()
 $("#dev_op").click(function(){
     if($("#dev_op").get(0).checked) {
         $("#status_bar").text("连接开发者模式服务器中...")
+        if(ws) ws.close()
         ws=new WebSocket("ws://localhost:59505")
         bindCallback()
     } else {
         $("#status_bar").text("连接聊天服务器中...")
+        if(ws) ws.close()
         ws=new WebSocket("ws://kiritow.com:59505")
         bindCallback()
     }
