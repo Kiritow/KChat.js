@@ -125,6 +125,7 @@ function sendMessage() {
         $("#nickname").attr("disabled","disabled")
         saveNickname()
         console.log("Sending message:"+ $("#msg").val())
+        ws.send("*#nick "+$("#nickname").val())
         ws.send("[New]"+$("#nickname").val()+"说: "+$("#msg").val())
     } else {
         console.log("Sending message:"+ $("#msg").val())
