@@ -4,22 +4,30 @@
 <title>K-Chat (Work In Progress)</title>
 <link rel="stylesheet" href="chatroom.css" type="text/css" />
 <div>
-    <div class="container">
-        <div class="bigtitle">
-        <h1>K-Chat (开发中)</h1>
+    <span>
+        <div class="list_container">
+            <p>在线列表</p>
+            <div id="online_tab" class="scrollable">
+
+            </div>
         </div>
-        
-        <div class="chat_bar" id="chat_bar">
+        <div class="container">
+            <div class="bigtitle">
+            <h1>K-Chat (开发中)</h1>
+            </div>
+            
+            <div class="chat_bar scrollable" id="chat_bar">
+            </div>
+            <div class="chat_container">
+                <p><input type="text" id="nickname" placeholder="在此输入你的昵称" disabled></p>
+                <p><textarea id="msg" placeholder="在此输入文字消息"></textarea></p>
+                <p><input id="send_msg" type="button" value="发送"> 或 Enter键发送消息</p>
+                <p><input id="change_nickname" type="button" value="修改昵称">
+                    <input id="confirm_nickname" type="button" value="确认昵称" hidden>
+                </p>
+            </div>
         </div>
-        <div class="chat_container">
-            <p><input type="text" id="nickname" placeholder="在此输入你的昵称" disabled></p>
-            <p><textarea id="msg" placeholder="在此输入文字消息"></textarea></p>
-            <p><input id="send_msg" type="button" value="发送"> 或 Enter键发送消息</p>
-            <p><input id="change_nickname" type="button" value="修改昵称">
-                <input id="confirm_nickname" type="button" value="确认昵称" hidden>
-            </p>
-        </div>
-    </div>
+    </span>
     <div>
         <p class="status_bar">状态: <span id="status_bar">正在连接到服务器...</span> </p>
         <p class="status_bar"><input type="checkbox" id="dev_op">开发者模式</p>

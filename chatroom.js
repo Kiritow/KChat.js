@@ -28,6 +28,28 @@ function getNickname() {
     }
 }
 
+var _xlst=new Array()
+function ListAdd(name) {
+    _xlst.push(name)
+    $("#online_tab").append("<p>"+name+"</p>")
+}
+
+function ListClear() {
+    _xlst=new Array()
+    $("#online_tab").empty()
+}
+
+function ListDel(name) {
+    var idx=_xlst.indexOf(name)
+    if(idx!=-1) {
+        _xlst.splice(idx,1)
+        $("#online_tab").empty()
+        $.each(_xlst,function(idx,name){
+            $("#online_tab").append("<p>"+name+"</p>")
+        })
+    }
+}
+
 var ws
 
 function bindCallback() {
@@ -36,9 +58,11 @@ function bindCallback() {
         $("#status_bar").text("已连接到服务器.")
         console.log("Sending hello broadcast...")
         if(getNickname()==null) {
+            ws.send("*#newj")
             ws.send("欢迎新人~!")
             $("#nickname").removeAttr("disabled")
         } else {
+            ws.send("*#name "+getNickname())
             ws.send("欢迎回来,"+getNickname())
             $("#nickname").val(getNickname())
         }
@@ -53,8 +77,25 @@ function bindCallback() {
         $("#status_bar").text("发生错误.")
     }
     ws.onmessage=function(ev) {
-        $("#chat_bar").append("<p><font color=blue>"+getTime()+"</font> "+ev.data+"</p>")
-        $("#chat_bar").get(0).scrollTop=$("#chat_bar").get(0).scrollHeight;
+        if(ev.data.substr(0,2)=="#*") {
+            var command=ev.data.substr(2,4)
+            console.log("Received command : "+command)
+            if(command=="Lclr") {
+                console.log("Command: clear list")
+                ListClear()
+            } else if(command=="Ladd") {
+                console.log("Command: list add")
+                ListAdd(ev.data.substr(6))
+            } else if(command=="Ldel") {
+                console.log("Command: list remove")
+                ListDel(ev.data.substr(6))
+            } else {
+                console.log("Unknown command: "+command)
+            }
+        } else {
+            $("#chat_bar").append("<p><font color=blue>"+getTime()+"</font> "+ev.data+"</p>")
+            $("#chat_bar").get(0).scrollTop=$("#chat_bar").get(0).scrollHeight;
+        }
     }
 }
 
@@ -116,6 +157,7 @@ $("#confirm_nickname").click(function(){
         alert("请填写昵称!")
         return
     }
+    ws.send("*#nick "+$("#nickname").val())
     ws.send(getNickname()+" 修改了昵称为 "+$("#nickname").val())
     saveNickname($("#nickname").val())
     $("#nickname").attr("disabled","disabled")

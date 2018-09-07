@@ -11,13 +11,19 @@ html, body {
 }
 .container {
     width:80%;
-    margin-left:10%;
+    margin-left:20%;
     padding: 0px 0 30px 0;
     border-radius: 10px;
     background: #dddddd;
 }
 .chat_container {
     margin-left:10px;
+}
+.list_container {
+    border-radius: 10px;
+    background: #dddddd;
+    float: left;
+    width:18%;
 }
 .bigtitle{
     margin: 1px auto;
@@ -47,13 +53,17 @@ html, body {
     font-size: 20px;
 }
 
+.scrollable {
+    overflow: scroll;
+    overflow-x: hidden;
+}
+
 .chat_bar{
     height: 40%;
     width: 100%;
     min-height: 200px;
     overflow-y: auto;
     background-color: #EFF3F7;
-	overflow: scroll;
 }
 
 .dd{
