@@ -125,6 +125,7 @@ server.on('request',(request)=>{
                     } else {
                         if(j.operation=="nickname_change") {
                             if(thisClient.nickname==null) {
+                                thisClient.nickname=j.newname
                                 SendToAll({type:"message",isSysMsg:true,message:`${thisClient.nickname} 加入了聊天室.`})
                             } else {
                                 let oldname=thisClient.nickname
