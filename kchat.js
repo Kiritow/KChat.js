@@ -229,7 +229,10 @@ server.on('request',(request)=>{
                             SendToAll(oldchannel,{type:"message",isSysMsg:true,message:`${thisClient.nickname} 切换了频道.`})
                             // Update old channel list
                             SendToAll(oldchannel,{type:"command",command:"list_del",val:thisClient.nickname})
-                            // Update new channel list
+
+                            // Notify this client
+                            SendToOne(connection,{type:"response",success:true})
+                            // Give this client the new channel online list.
                             SendOnlineListToOne(thisClient.channel,connection)
                         } else {
                             console.warn("Unknown operation: " + j.operation)
