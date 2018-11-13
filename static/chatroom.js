@@ -68,9 +68,6 @@ function ListDel(name) {
     }
 }
 
-// This is called and reseted on every response.
-let operation_callback=()=>{}
-
 function WSSendJSON(ws,j) {
     ws.send(JSON.stringify(j))
 }
@@ -78,6 +75,26 @@ function WSSendJSON(ws,j) {
 // Send content of $("#msg").val() to channel $("#channel_name").val()
 function WSSendMessage(ws) {
     WSSendJSON(ws,{type:"message",message:$("#msg").val(),channel:$("#channel_name").val()})
+}
+
+
+// This is called and reseted on every response.
+let operation_callback=()=>{}
+let reconnect_timer_id=null
+let reconnect_ws_url="ws://kchat.kiritow.com/websocket"
+let reconnect_ws_version='kchat-v1c'
+let ws=null
+// Forward declaration
+let wsConnect=()=>{}
+
+function wsConnectOfficial() {
+    reconnect_ws_url="ws://kchat.kiritow.com/websocket"
+    wsConnect()
+}
+
+function wsConnectDev() {
+    reconnect_ws_url="ws://localhost:8001"
+    wsConnect()
 }
 
 function bindCallback(ws) {
@@ -102,7 +119,11 @@ function bindCallback(ws) {
     }
     ws.onclose=function(){
         console.log("onclose")
-        $("#status_bar").text("连接已关闭.")
+        $("#status_bar").text("连接已关闭. 5秒后自动重连...")
+        reconnect_timer_id=setTimeout(()=>{
+            $("#status_bar").text("重新连接中...")
+            wsConnect()
+        },5000)
     }
     ws.onerror=function() {
         console.log("onerror")
@@ -148,21 +169,26 @@ function bindCallback(ws) {
     }
 }
 
-// For easier server configure.
-let ws=new WebSocket("ws://kchat.kiritow.com/websocket","kchat-v1")
-bindCallback(ws)
+wsConnect = ()=>{
+    if(reconnect_timer_id!=null) {
+        clearTimeout(reconnect_timer_id)
+        reconnect_timer_id=null
+    }
+    
+    if(ws!=null) {
+        ws.close()
+    }
+    ws=new WebSocket(reconnect_ws_url,reconnect_ws_version)
+    bindCallback(ws)
+}
 
 $("#dev_op").click(function(){
     if($("#dev_op").get(0).checked) {
         $("#status_bar").text("连接开发者模式服务器中...")
-        if(ws) ws.close()
-        ws=new WebSocket("ws://localhost:8001","kchat-v1c") 
-        bindCallback(ws)
+        wsConnectDev()
     } else {
         $("#status_bar").text("连接聊天服务器中...")
-        if(ws) ws.close()
-        let ws=new WebSocket("ws://kchat.kiritow.com/websocket","kchat-v1")
-        bindCallback(ws)
+        wsConnectOfficial()
     }
 })
 
@@ -254,3 +280,5 @@ $("#confirm_channel").click(function(){
     }
     WSSendJSON(ws,{type:"operation",operation:"switch_channel",newchannel:$("#channel_name").val()})
 })
+
+wsConnectOfficial()
