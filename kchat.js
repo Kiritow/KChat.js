@@ -7,7 +7,7 @@ const WebSocketServer=require('websocket').server
 
 let httpServer=http.createServer((request,response)=>{
     console.log("new http connection")
-    let reqPath=path.join('static/',url.parse(request.url).path)
+    let reqPath=path.join('static/',path.normalize(url.parse(request.url).pathname))
     console.log('request path: ' + reqPath)
     fs.exists(reqPath,(exists)=>{
         if(exists){
