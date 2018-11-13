@@ -98,7 +98,7 @@ function bindCallback(ws) {
     }
 }
 
-let ws=new WebSocket("ws://kiritow.com:59505")
+let ws=new WebSocket("ws://kchat.kiritow.com","kchat-v1")
 bindCallback(ws)
 
 $("#dev_op").click(function(){
@@ -110,7 +110,7 @@ $("#dev_op").click(function(){
     } else {
         $("#status_bar").text("连接聊天服务器中...")
         if(ws) ws.close()
-        let ws=new WebSocket("ws://kiritow.com:59505")
+        let ws=new WebSocket("ws://kchat.kiritow.com","kchat-v1")
         bindCallback(ws)
     }
 })
