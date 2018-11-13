@@ -109,11 +109,12 @@ server.on('request',(request)=>{
                         console.warn("Double handshake. Something is wrong")
                         SendToOne(connection,{type:"message",isSysMsg:true,message:"您已登录. 请勿重新登录"})
                     } else {
+                        thisClient.handshake_done=true
                         if(j.newuser) {
                             SendToAll({type:"message",isSysMsg:true,message:"欢迎新人~!"})
+                            SendToOne(connection,{type:"message",isSysMsg:true,message:"欢迎加入聊天室. 请先完善您的个人资料(昵称)后再发言."})
                         } else {
                             thisClient.nickname=j.nickname
-                            thisClient.handshake_done=true
                             SendToOne(connection,{type:"message",isSysMsg:true,message:`欢迎回来, ${thisClient.nickname}`})
                             SendToOthers(connection,{type:"message",isSysMsg:true,message:`${thisClient.nickname} 加入了聊天室.`})
                         }
@@ -138,7 +139,15 @@ server.on('request',(request)=>{
                         }
                     }
                 } else if(j.type=='message') {
-                    SendToAll({type:"message",isSysMsg:false,sender:thisClient.nickname,message:j.message})
+                    if(!thisClient.handshake_done) {
+                        console.warn("Invalid user. Something is wrong")
+                        SendToOne(connection,{type:"message",isSysMsg:true,message:"发送消息失败. 请先登录."})
+                    } else if(thisClient.nickname==null) {
+                        console.warn("Send message before nickname filled.")
+                        SendToOne(connection,{type:"message",isSysMsg:true,message:"请先完善您的个人资料(昵称)后再发言."})
+                    } else {
+                        SendToAll({type:"message",isSysMsg:false,sender:thisClient.nickname,message:j.message})
+                    }
                 } else {
                     console.warn("Unknown type: " + j.type)
                 }
