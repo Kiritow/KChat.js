@@ -20,10 +20,16 @@
             </div>
             <div class="chat_container">
                 <p><input type="text" id="nickname" placeholder="在此输入你的昵称" disabled></p>
-                <p><textarea id="msg" placeholder="在此输入文字消息"></textarea></p>
-                <p><input id="send_msg" type="button" value="发送"> 或 Enter键发送消息</p>
-                <p><input id="change_nickname" type="button" value="修改昵称">
+                <p><textarea id="msg" placeholder="在此输入文字消息" disabled></textarea></p>
+                <p><input id="send_msg" type="button" value="发送" disabled> 
+                    <input id="send_on_enter" type="checkbox" checked> Enter键发送
+                </p>
+                <p><input id="change_nickname" type="button" value="修改昵称" disabled>
                     <input id="confirm_nickname" type="button" value="确认昵称" hidden>
+                </p>
+                <p>Channel: <input id="channel_name" type="text" value="main" disabled>
+                    <input id="change_channel" type="button" value="修改频道" disabled>
+                    <input id="confirm_channel" type="button" value="进入频道" hidden>
                 </p>
             </div>
         </div>

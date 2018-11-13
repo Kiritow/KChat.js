@@ -28,10 +28,24 @@ function getNickname() {
     }
 }
 
+function ClearBar() {
+    $("#chat_bar").empty()
+    $("#chat_bar").get(0).scrollTop=$("#chat_bar").get(0).scrollHeight;
+}
+
+function AppendToBar(msg) {
+    $("#chat_bar").append("<p><font color=blue>"+getTime()+"</font> "+msg+"</p>")
+    $("#chat_bar").get(0).scrollTop=$("#chat_bar").get(0).scrollHeight;
+}
+
 let _xlst=new Array()
 function ListAdd(name) {
     _xlst.push(name)
-    $("#online_tab").append("<p>"+name+"</p>")
+    if(name!=null) {
+        $("#online_tab").append("<p>"+name+"</p>")
+    } else {
+        $("#online_tab").append("<p>&ltNoname&gt</p>")
+    }
 }
 
 function ListClear() {
@@ -45,24 +59,46 @@ function ListDel(name) {
         _xlst.splice(idx,1)
         $("#online_tab").empty()
         $.each(_xlst,function(idx,name){
-            $("#online_tab").append("<p>"+name+"</p>")
+            if(name!=null) {
+                $("#online_tab").append("<p>"+name+"</p>")
+            } else {
+                $("#online_tab").append("<p>&ltNoname&gt</p>")
+            }
         })
     }
+}
+
+// This is called and reseted on every response.
+let operation_callback=()=>{}
+
+function WSSendJSON(ws,j) {
+    ws.send(JSON.stringify(j))
+}
+
+// Send content of $("#msg").val() to channel $("#channel_name").val()
+function WSSendMessage(ws) {
+    WSSendJSON(ws,{type:"message",message:$("#msg").val(),channel:$("#channel_name").val()})
 }
 
 function bindCallback(ws) {
     ws.onopen=function() {
         console.log("onopen")
         $("#status_bar").text("已连接到服务器.")
+
         console.log("Handshake starts")
         if(getNickname()==null) {
-            ws.send(JSON.stringify({type:"handshake",newuser:true}))
+            WSSendJSON(ws,{type:"handshake",channel:$("#channel_name").val(),newuser:true})
             $("#nickname").removeAttr("disabled")
         } else {
-            ws.send(JSON.stringify({type:"handshake",newuser:false,nickname:getNickname()}))
+            WSSendJSON(ws,{type:"handshake",channel:$("#channel_name").val(),newuser:false,nickname:getNickname()})
             $("#nickname").val(getNickname())
         }
-        console.log("Handshake sent. waiting for response...")
+        console.log("Handshake sent.")
+
+        $("#msg").removeAttr("disabled")
+        $("#send_msg").removeAttr("disabled")
+        $("#change_nickname").removeAttr("disabled")
+        $("#change_channel").removeAttr("disabled")
     }
     ws.onclose=function(){
         console.log("onclose")
@@ -94,11 +130,18 @@ function bindCallback(ws) {
             }
         } else if(j.type=="message") {
             if(j.isSysMsg) {
-                $("#chat_bar").append("<p><font color=blue>"+getTime()+"</font>[系统消息] "+j.message+"</p>")
+                AppendToBar("[系统消息] "+j.message)
             } else {
-                $("#chat_bar").append("<p><font color=blue>"+getTime()+"</font> " + j.sender + "说: " + j.message + "</p>")
+                AppendToBar(j.sender + "说: " + j.message)
             }
-            $("#chat_bar").get(0).scrollTop=$("#chat_bar").get(0).scrollHeight;
+        } else if(j.type=="response") {
+            console.log("Operation response: " + j.success)
+            if(!j.success) {
+                console.log("Operation failure reason: "+j.reason)
+            }
+
+            operation_callback(j)
+            operation_callback=()=>{}
         } else {
             console.log("Unknown message type: " + j.type)
         }
@@ -113,7 +156,7 @@ $("#dev_op").click(function(){
     if($("#dev_op").get(0).checked) {
         $("#status_bar").text("连接开发者模式服务器中...")
         if(ws) ws.close()
-        ws=new WebSocket("ws://localhost:8001","kchat-v1") 
+        ws=new WebSocket("ws://localhost:8001","kchat-v1c") 
         bindCallback(ws)
     } else {
         $("#status_bar").text("连接聊天服务器中...")
@@ -132,11 +175,11 @@ function sendMessage() {
         $("#nickname").attr("disabled","disabled")
         saveNickname()
         console.log("Sending message:"+ $("#msg").val())
-        ws.send(JSON.stringify({type:"operation",operation:"nickname_change",newname:$("#nickname").val()}))
-        ws.send(JSON.stringify({type:"message",message:$("#msg").val()}))
+        SendJSON({type:"operation",operation:"nickname_change",newname:$("#nickname").val()})
+        WSSendMessage(ws)
     } else {
         console.log("Sending message:"+ $("#msg").val())
-        ws.send(JSON.stringify({type:"message",message:$("#msg").val()}))
+        WSSendMessage(ws)
     }
     $("#msg").val('')
 }
@@ -145,9 +188,8 @@ $("#send_msg").click(function(){
     sendMessage()
 })
 
-// TODO: provide an option for those who don't want send-on-enter.
 $("#msg").on('keypress',function(ev){
-    if(ev.keyCode==13) {
+    if($("#send_on_enter").get(0).checked && ev.keyCode==13) {
         sendMessage()
         return false
     }
@@ -166,11 +208,49 @@ $("#confirm_nickname").click(function(){
         alert("请填写昵称!")
         return
     }
-    ws.send(JSON.stringify({type:"operation",operation:"nickname_change",newname:$("#nickname").val()}))
+    WSSendJSON(ws,{type:"operation",operation:"nickname_change",newname:$("#nickname").val()})
     saveNickname($("#nickname").val())
     $("#nickname").attr("disabled","disabled")
     $("#confirm_nickname").attr("hidden","hidden")
     $("#change_nickname").removeAttr("hidden")
     $("#msg").removeAttr("disabled")
     $("#send_msg").removeAttr("disabled")
+})
+
+let old_channel_name=''
+
+$("#change_channel").click(function(){
+    old_channel_name=$("#channel_name").val()
+
+    $("#msg").attr("disabled","disabled")
+    $("#send_msg").attr("disabled","disabled")
+    $("#channel_name").removeAttr("disabled")
+    $("#change_nickname").attr("disabled","disabled")
+
+    $("#change_channel").attr("hidden","hidden")
+    $("#confirm_channel").removeAttr("hidden")
+})
+
+$("#confirm_channel").click(function(){
+    $("#channel_name").attr("disabled","disabled")
+    $("#confirm_channel").attr("disabled","disabled")
+
+    ClearBar()
+    AppendToBar("[kchat] 正在切换至频道: " + $("#channel_name").val())
+    operation_callback=(j)=>{
+        if(j.success) {
+            AppendToBar("[kchat] 频道切换成功")
+        } else {
+            AppendToBar("[kchat] 频道切换失败. 错误: " + j.reason)
+            $("#channel_name").val(old_channel_name)
+        }
+
+        $("#msg").removeAttr("disabled")
+        $("#send_msg").removeAttr("disabled")
+        $("#change_nickname").removeAttr("disabled")
+        $("#change_channel").removeAttr("hidden")
+        $("#confirm_channel").attr("hidden","hidden")
+        $("#confirm_channel").removeAttr("disabled")
+    }
+    WSSendJSON(ws,{type:"operation",operation:"switch_channel",newchannel:$("#channel_name").val()})
 })
