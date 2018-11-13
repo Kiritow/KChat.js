@@ -21,7 +21,9 @@
   },
   "homepage": "https://github.com/kiritow/KChat.js#readme",
   "dependencies": {
+    "log4js": "^3.0.6",
     "mime": "^2.3.1",
+    "mysql": "^2.16.0",
     "websocket": "^1.0.28"
   }
 }
