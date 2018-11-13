@@ -19,5 +19,9 @@
   "bugs": {
     "url": "https://github.com/kiritow/KChat.js/issues"
   },
-  "homepage": "https://github.com/kiritow/KChat.js#readme"
+  "homepage": "https://github.com/kiritow/KChat.js#readme",
+  "dependencies": {
+    "mime": "^2.3.1",
+    "websocket": "^1.0.28"
+  }
 }
