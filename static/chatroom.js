@@ -83,6 +83,7 @@ let operation_callback=()=>{}
 let reconnect_timer_id=null
 let reconnect_ws_url="ws://kchat.kiritow.com/websocket"
 let reconnect_ws_version='kchat-v1c'
+let reconnect_enabled=true
 let ws=null
 // Forward declaration
 let wsConnect=()=>{}
@@ -120,10 +121,16 @@ function bindCallback(ws) {
     ws.onclose=function(){
         console.log("onclose")
         $("#status_bar").text("连接已关闭. 5秒后自动重连...")
-        reconnect_timer_id=setTimeout(()=>{
-            $("#status_bar").text("重新连接中...")
-            wsConnect()
-        },5000)
+        if(reconnect_enabled) {
+            console.log('reconnect enabled.')
+            reconnect_timer_id=setTimeout(()=>{
+                console.log("resetting timer inside timer...")
+                reconnect_timer_id=null
+                $("#status_bar").text("重新连接中...")
+                wsConnect()
+                },5000)
+            console.log('reconnect_timer_id: '+reconnect_timer_id)
+        }
     }
     ws.onerror=function() {
         console.log("onerror")
@@ -170,19 +177,18 @@ function bindCallback(ws) {
 }
 
 wsConnect = ()=>{
-    if(reconnect_timer_id!=null) {
-        clearTimeout(reconnect_timer_id)
-        reconnect_timer_id=null
-    }
-    
-    if(ws!=null) {
-        ws.close()
-    }
+    console.log(`Connect to server: ${reconnect_ws_url} with version: ${reconnect_ws_version}`)
     ws=new WebSocket(reconnect_ws_url,reconnect_ws_version)
     bindCallback(ws)
 }
 
 $("#dev_op").click(function(){
+    if(reconnect_timer_id!=null) {
+        console.log("dev_op switched. clearing timer...")
+        clearTimeout(reconnect_timer_id)
+        reconnect_timer_id=null
+    }
+
     if($("#dev_op").get(0).checked) {
         $("#status_bar").text("连接开发者模式服务器中...")
         wsConnectDev()
@@ -227,6 +233,8 @@ $("#change_nickname").click(function(){
     $("#nickname").removeAttr("disabled")
     $("#change_nickname").attr("hidden","hidden")
     $("#confirm_nickname").removeAttr("hidden")
+
+    $("#change_channel").attr("disabled","disabled")
 })
 
 $("#confirm_nickname").click(function(){
@@ -241,6 +249,8 @@ $("#confirm_nickname").click(function(){
     $("#change_nickname").removeAttr("hidden")
     $("#msg").removeAttr("disabled")
     $("#send_msg").removeAttr("disabled")
+
+    $("#change_channel").removeAttr("disabled")
 })
 
 let old_channel_name=''
