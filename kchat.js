@@ -52,7 +52,7 @@ function RemoveClientByConn(conn) {
     for(let i=0;i<clients.length;i++) {
         if(clients[i].conn==conn) {
             console.log("Connection found in list. Removing...")
-            clients[i].close()
+            clients[i].conn.close()
             clients.splice(i,i) // Is this ok?
             return true
         }
