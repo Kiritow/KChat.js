@@ -50,23 +50,19 @@ function ListDel(name) {
     }
 }
 
-let ws
-
-function bindCallback() {
+function bindCallback(ws) {
     ws.onopen=function() {
         console.log("onopen")
         $("#status_bar").text("已连接到服务器.")
-        console.log("Sending hello broadcast...")
+        console.log("Handshake starts")
         if(getNickname()==null) {
-            ws.send("*#newj")
-            ws.send("欢迎新人~!")
+            ws.send(JSON.stringify({type:"handshake",newuser:true}))
             $("#nickname").removeAttr("disabled")
         } else {
-            ws.send("*#name "+getNickname())
-            ws.send("欢迎回来,"+getNickname())
+            ws.send(JSON.stringify({type:"handshake",newuser:false,nickname:getNickname()}))
             $("#nickname").val(getNickname())
         }
-        console.log("hello sent.")
+        console.log("Handshake sent. waiting for response...")
     }
     ws.onclose=function(){
         console.log("onclose")
@@ -77,42 +73,45 @@ function bindCallback() {
         $("#status_bar").text("发生错误.")
     }
     ws.onmessage=function(ev) {
-        if(ev.data.substr(0,2)=="#*") {
-            let command=ev.data.substr(2,4)
-            console.log("Received command : "+command)
-            if(command=="Lclr") {
-                console.log("Command: clear list")
+        let j=JSON.parse(ev.data)
+        if(j.type=="command"){
+            console.log("Received command : "+j.command)
+            if(j.command=="list_clear"){
                 ListClear()
-            } else if(command=="Ladd") {
-                console.log("Command: list add")
-                ListAdd(ev.data.substr(6))
-            } else if(command=="Ldel") {
-                console.log("Command: list remove")
-                ListDel(ev.data.substr(6))
+            } else if(j.command=="list_add") {
+                ListAdd(j.val)
+            } else if(j.command=="list_del") {
+                ListDel(j.val)
             } else {
-                console.log("Unknown command: "+command)
+                console.log("Unknown command: " + command)
             }
-        } else {
-            $("#chat_bar").append("<p><font color=blue>"+getTime()+"</font> "+ev.data+"</p>")
+        } else if(j.type=="message") {
+            if(j.isSysMsg) {
+                $("#chat_bar").append("<p><font color=blue>"+getTime()+"</font>[系统消息] "+j.message+"</p>")
+            } else {
+                $("#chat_bar").append("<p><font color=blue>"+getTime()+"</font> " + j.sender + "说: " + j.message + "</p>")
+            }
             $("#chat_bar").get(0).scrollTop=$("#chat_bar").get(0).scrollHeight;
+        } else {
+            console.log("Unknown message type: " + j.type)
         }
     }
 }
 
 let ws=new WebSocket("ws://kiritow.com:59505")
-bindCallback()
+bindCallback(ws)
 
 $("#dev_op").click(function(){
     if($("#dev_op").get(0).checked) {
         $("#status_bar").text("连接开发者模式服务器中...")
         if(ws) ws.close()
-        ws=new WebSocket("ws://localhost:59505")
-        bindCallback()
+        ws=new WebSocket("ws://localhost:8001","kchat-v1") 
+        bindCallback(ws)
     } else {
         $("#status_bar").text("连接聊天服务器中...")
         if(ws) ws.close()
-        ws=new WebSocket("ws://kiritow.com:59505")
-        bindCallback()
+        let ws=new WebSocket("ws://kiritow.com:59505")
+        bindCallback(ws)
     }
 })
 
@@ -125,11 +124,11 @@ function sendMessage() {
         $("#nickname").attr("disabled","disabled")
         saveNickname()
         console.log("Sending message:"+ $("#msg").val())
-        ws.send("*#nick "+$("#nickname").val())
-        ws.send("[New]"+$("#nickname").val()+"说: "+$("#msg").val())
+        ws.send(JSON.stringify({type:"operation",operation:"nickname_change",newname:$("#nickname").val()}))
+        ws.send(JSON.stringify({type:"message",message:$("#msg").val()}))
     } else {
         console.log("Sending message:"+ $("#msg").val())
-        ws.send($("#nickname").val()+"说: "+$("#msg").val())
+        ws.send(JSON.stringify({type:"message",message:$("#msg").val()}))
     }
     $("#msg").val('')
 }
@@ -138,6 +137,7 @@ $("#send_msg").click(function(){
     sendMessage()
 })
 
+// TODO: provide an option for those who don't want send-on-enter.
 $("#msg").on('keypress',function(ev){
     if(ev.keyCode==13) {
         sendMessage()
@@ -158,8 +158,7 @@ $("#confirm_nickname").click(function(){
         alert("请填写昵称!")
         return
     }
-    ws.send("*#nick "+$("#nickname").val())
-    ws.send(getNickname()+" 修改了昵称为 "+$("#nickname").val())
+    ws.send(JSON.stringify({type:"operation",operation:"nickname_change",newname:$("#nickname").val()}))
     saveNickname($("#nickname").val())
     $("#nickname").attr("disabled","disabled")
     $("#confirm_nickname").attr("hidden","hidden")
