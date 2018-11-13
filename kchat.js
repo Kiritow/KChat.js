@@ -53,7 +53,7 @@ function RemoveClientByConn(conn) {
         if(clients[i].conn==conn) {
             console.log("Connection found in list. Removing...")
             clients[i].conn.close()
-            clients.splice(i,i) // Is this ok?
+            clients.splice(i,1) // Is this ok?
             return true
         }
     }
@@ -94,6 +94,16 @@ function SendToOne(this_conn,obj) {
     this_conn.sendUTF(JSON.stringify(obj))
 }
 
+function SendOnlineListToOne(conn) {
+    conn.sendUTF(JSON.stringify({type:"command",command:"list_clear"}))
+    let temp=new Array()
+    for(let i=0;i<clients.length;i++) {
+        if(clients[i].nickname!=null) temp.push(clients[i].nickname)
+    }
+    console.log('Online list has ' + temp.length + ' values.')
+    conn.sendUTF(JSON.stringify({type:"command",command:"list_fill",val:temp}))
+}
+
 function CheckMessage(msg) {
     msg=msg.replace(/</g,'&lt')
     return msg.replace(/>/g,'&gt')
@@ -115,14 +125,19 @@ server.on('request',(request)=>{
                         SendToOne(connection,{type:"message",isSysMsg:true,message:"您已登录. 请勿重新登录"})
                     } else {
                         thisClient.handshake_done=true
+                        
                         if(j.newuser) {
                             SendToAll({type:"message",isSysMsg:true,message:"欢迎新人~!"})
                             SendToOne(connection,{type:"message",isSysMsg:true,message:"欢迎加入聊天室. 请先完善您的个人资料(昵称)后再发言."})
                         } else {
-                            thisClient.nickname=j.nickname
+                            thisClient.nickname=CheckMessage(j.nickname)
                             SendToOne(connection,{type:"message",isSysMsg:true,message:`欢迎回来, ${thisClient.nickname}`})
                             SendToOthers(connection,{type:"message",isSysMsg:true,message:`${thisClient.nickname} 加入了聊天室.`})
+                            // Update Online list
+                            SendToOthers(connection,{type:"command",command:"list_add",val:thisClient.nickname})
                         }
+
+                        SendOnlineListToOne(connection)
                     }
                 } else if(j.type=='operation') {
                     if(!thisClient.handshake_done) {
@@ -133,11 +148,15 @@ server.on('request',(request)=>{
                             if(thisClient.nickname==null) {
                                 thisClient.nickname=CheckMessage(j.newname)
                                 SendToAll({type:"message",isSysMsg:true,message:`${thisClient.nickname} 加入了聊天室.`})
+                                // Update online list
+                                SendToAll({type:"command",command:"list_add",val:thisClient.nickname})
                             } else {
                                 let oldname=thisClient.nickname
                                 let newname=CheckMessage(j.newname)
                                 thisClient.nickname=newname
                                 SendToAll({type:"message",isSysMsg:true,message:`${oldname} 修改了昵称为 ${newname}`})
+                                // Update online list
+                                SendToAll({type:"command",command:"list_replace",oldval:oldname,newval:newname})
                             }
                         } else {
                             console.warn("Unknown operation: " + j.operation)
@@ -171,6 +190,8 @@ server.on('request',(request)=>{
             let nickname=thisClient.nickname
             RemoveClientByConn(connection)
             SendToAll({type:"message",isSysMsg:true,message:`${nickname} 离开了.`})
+            // Update online list
+            SendToAll({type:"command",command:"list_del",val:nickname})
         })
     } catch (e) {
         console.warn("Exception: " + e)

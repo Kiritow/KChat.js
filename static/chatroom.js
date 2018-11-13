@@ -80,8 +80,15 @@ function bindCallback(ws) {
                 ListClear()
             } else if(j.command=="list_add") {
                 ListAdd(j.val)
+            } else if(j.command=="list_fill") {
+                for(let i=0;i<j.val.length;i++) {
+                    ListAdd(j.val[i])
+                }
             } else if(j.command=="list_del") {
                 ListDel(j.val)
+            } else if(j.command=="list_replace") {
+                ListDel(j.oldval)
+                ListAdd(j.newval)
             } else {
                 console.log("Unknown command: " + command)
             }
