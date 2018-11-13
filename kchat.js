@@ -94,6 +94,11 @@ function SendToOne(this_conn,obj) {
     this_conn.sendUTF(JSON.stringify(obj))
 }
 
+function CheckMessage(msg) {
+    msg=msg.replace(/</g,'&lt')
+    return msg.replace(/>/g,'&gt')
+}
+
 server.on('request',(request)=>{
     try {
         let connection=request.accept('kchat-v1',request.origin)
@@ -126,11 +131,11 @@ server.on('request',(request)=>{
                     } else {
                         if(j.operation=="nickname_change") {
                             if(thisClient.nickname==null) {
-                                thisClient.nickname=j.newname
+                                thisClient.nickname=CheckMessage(j.newname)
                                 SendToAll({type:"message",isSysMsg:true,message:`${thisClient.nickname} 加入了聊天室.`})
                             } else {
                                 let oldname=thisClient.nickname
-                                let newname=j.newname
+                                let newname=CheckMessage(j.newname)
                                 thisClient.nickname=newname
                                 SendToAll({type:"message",isSysMsg:true,message:`${oldname} 修改了昵称为 ${newname}`})
                             }
@@ -146,7 +151,7 @@ server.on('request',(request)=>{
                         console.warn("Send message before nickname filled.")
                         SendToOne(connection,{type:"message",isSysMsg:true,message:"请先完善您的个人资料(昵称)后再发言."})
                     } else {
-                        SendToAll({type:"message",isSysMsg:false,sender:thisClient.nickname,message:j.message})
+                        SendToAll({type:"message",isSysMsg:false,sender:thisClient.nickname,message:CheckMessage(j.message)})
                     }
                 } else {
                     console.warn("Unknown type: " + j.type)
