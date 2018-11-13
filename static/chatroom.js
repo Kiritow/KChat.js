@@ -1,14 +1,14 @@
 function getTime() {
-    var date = new Date()
-    var y = date.getFullYear();
-    var m = date.getMonth() + 1;
+    let date = new Date()
+    let y = date.getFullYear();
+    let m = date.getMonth() + 1;
     m = m < 10 ? ('0' + m) : m;
-    var d = date.getDate();
+    let d = date.getDate();
     d = d < 10 ? ('0' + d) : d;
-    var h = date.getHours();
+    let h = date.getHours();
     h = h < 10 ? ('0' + h) : h;
-    var minute = date.getMinutes();
-    var second = date.getSeconds();
+    let minute = date.getMinutes();
+    let second = date.getSeconds();
     minute = minute < 10 ? ('0' + minute) : minute;
     second = second < 10 ? ('0' + second) : second;
     return y + '-' + m + '-' + d+' '+h+':'+minute+':'+second;
@@ -20,7 +20,7 @@ function saveNickname() {
 }
 
 function getNickname() {
-    var name=$.cookie('this_nickname')
+    let name=$.cookie('this_nickname')
     if(name==null) {
         return null
     } else {
@@ -28,7 +28,7 @@ function getNickname() {
     }
 }
 
-var _xlst=new Array()
+let _xlst=new Array()
 function ListAdd(name) {
     _xlst.push(name)
     $("#online_tab").append("<p>"+name+"</p>")
@@ -40,7 +40,7 @@ function ListClear() {
 }
 
 function ListDel(name) {
-    var idx=_xlst.indexOf(name)
+    let idx=_xlst.indexOf(name)
     if(idx!=-1) {
         _xlst.splice(idx,1)
         $("#online_tab").empty()
@@ -50,7 +50,7 @@ function ListDel(name) {
     }
 }
 
-var ws
+let ws
 
 function bindCallback() {
     ws.onopen=function() {
@@ -78,7 +78,7 @@ function bindCallback() {
     }
     ws.onmessage=function(ev) {
         if(ev.data.substr(0,2)=="#*") {
-            var command=ev.data.substr(2,4)
+            let command=ev.data.substr(2,4)
             console.log("Received command : "+command)
             if(command=="Lclr") {
                 console.log("Command: clear list")
@@ -99,7 +99,7 @@ function bindCallback() {
     }
 }
 
-var ws=new WebSocket("ws://kiritow.com:59505")
+let ws=new WebSocket("ws://kiritow.com:59505")
 bindCallback()
 
 $("#dev_op").click(function(){

@@ -1,0 +1,23 @@
+{
+  "name": "kchat",
+  "version": "1.0.0",
+  "description": "A Simple Chat Room",
+  "main": "kchat.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kiritow/KChat.js.git"
+  },
+  "keywords": [
+    "chatroom",
+    "node"
+  ],
+  "author": "Kiritow",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/kiritow/KChat.js/issues"
+  },
+  "homepage": "https://github.com/kiritow/KChat.js#readme"
+}
