@@ -1,0 +1,6 @@
+{
+    "host": "127.0.0.1",
+    "user": "__db username here__",
+    "password": "__db password here__",
+    "database": "__db name here__"
+}

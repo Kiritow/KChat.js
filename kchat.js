@@ -6,7 +6,7 @@ const mime=require('mime')
 const querystring=require('querystring')
 
 const WebSocketServer=require('websocket').server
-const UserInfoProvider=require('./dao.js')
+const DatabaseProvider=require('./dao.js')
 
 // Log goes to kchat_server.log
 let log4js=require('log4js')
@@ -25,6 +25,7 @@ log4js.configure({
     }
 })
 const logger=log4js.getLogger('kchat_server')
+const db=new DatabaseProvider()
 
 function RequestHandler(request,response,reqPath) {
     console.log('request path: ' + reqPath)
