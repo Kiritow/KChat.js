@@ -159,6 +159,10 @@ function bindCallback(ws) {
         } else if(j.type=="message") {
             if(j.isSysMsg) {
                 AppendToBar("[系统消息] "+j.message)
+            } else if(j.msgType=="code") {
+                codeResult = hljs.highlight(j.codeLang || "plain", j.message, true).value
+                codeResult = codeResult.replace(/(\r\n|\n|\r)/gm, "</p><p>");
+                AppendToBar(j.sender + "的代码消息: <p>" + codeResult + "</p>")
             } else {
                 AppendToBar(j.sender + "说: " + j.message)
             }
@@ -203,12 +207,17 @@ function sendMessage() {
         alert("请填写昵称!")
         return
     }
-    if(getNickname()==null) {
+
+    if(getNickname() == null) {
         $("#nickname").attr("disabled","disabled")
         saveNickname()
         console.log("Sending message:"+ $("#msg").val())
-        SendJSON({type:"operation",operation:"nickname_change",newname:$("#nickname").val()})
-        WSSendMessage(ws)
+        WSSendJSON(ws, {type:"operation",operation:"nickname_change",newname:$("#nickname").val()})
+    }
+
+    if($("#code_op").get(0).checked) {
+        console.log(`Sending code message (lang: ${$("#code_lang").val()})...`)
+        WSSendJSON(ws, {type:"message",msgType:"code",codeLang:$("#code_lang").val(),message:$("#msg").val(),channel:$("#channel_name").val()})
     } else {
         console.log("Sending message:"+ $("#msg").val())
         WSSendMessage(ws)

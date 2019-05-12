@@ -2,7 +2,8 @@
 <html>
 <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
 <title>K-Chat (Work In Progress)</title>
-<link rel="stylesheet" href="chatroom.css" type="text/css" />
+<link rel="stylesheet" href="chatroom.css" type="text/css">
+<link rel="stylesheet" href="styles/default.css" type="text/css">
 <div>
     <span>
         <div class="list_container">
@@ -20,7 +21,15 @@
             </div>
             <div class="chat_container">
                 <p><input type="text" id="nickname" placeholder="在此输入你的昵称" disabled></p>
-                <p><textarea id="msg" placeholder="在此输入文字消息" disabled></textarea></p>
+                <p><textarea id="msg" placeholder="在此输入文字消息" disabled></textarea>
+                    <input type="checkbox" id="code_op">代码消息</p>
+                    <select id="code_lang">
+                        <option value="plain">PlainText</option>
+                        <option value="cpp">C++</option>
+                        <option value="js">JavaScript</option>
+                        <option value="python">Python</option>
+                    </select>
+                </p>
                 <p><input id="send_msg" type="button" value="发送" disabled> 
                     <input id="send_on_enter" type="checkbox" checked> Enter键发送
                 </p>
@@ -44,6 +53,10 @@
 </div>
 <script src="jquery-3.3.1.min.js"></script>
 <script src="jquery.cookie.js"></script>
+<script src="highlight.pack.js"></script>
+<script>
+    hljs.initHighlightingOnLoad();
+</script>
 <script src="chatroom.js"></script>
 
 </html>
