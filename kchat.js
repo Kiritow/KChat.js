@@ -250,7 +250,12 @@ server.on('request',(request)=>{
                     } else {
                         // Something wrong with log4js? logger.log() is useless, and logger.info() is the right one.
                         logger.info(`Channel: ${thisClient.channel}. Sender: ${thisClient.nickname}(${thisClient.ip}). Raw Message: ${j.message}`)
-                        SendToAll(thisClient.channel,{type:"message",isSysMsg:false,sender:thisClient.nickname,message:CheckMessage(j.message)})
+                        // Must ensure the following attribute.
+                        j.type = "message"
+                        j.isSysMsg = false
+                        j.sender = thisClient.nickname
+                        j.message = CheckMessage(j.message)
+                        SendToAll(thisClient.channel, j)
                     }
                 } else {
                     console.warn("Unknown type: " + j.type)
