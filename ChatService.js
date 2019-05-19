@@ -117,6 +117,7 @@ class ChatService {
     handleNewConnection(conn) {
         if (conn.ip in this.ipBlackList) {
             conn.close()
+            return
         }
         this.connQueue.push(new Client(conn))
     }
