@@ -37,7 +37,7 @@ function StaticHandler(request,response,reqPath) {
     })
 }
 
-let httpServer=http.createServer(async (request,response)=>{
+let httpServer=http.createServer((request,response)=>{
     console.log("new http connection: " + request.url)
     let urlinfo=url.parse(request.url)
     if(urlinfo.path=='/api/register') {
@@ -53,7 +53,7 @@ let httpServer=http.createServer(async (request,response)=>{
             request.on('data',(chunk)=>{
                 data+=chunk
             })
-            request.on('end',()=>{
+            request.on('end',async ()=>{
                 let info = null
                 try {
                     data = JSON.parse(data)

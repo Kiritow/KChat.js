@@ -1,5 +1,5 @@
 const loginService = require("./LoginService").getService()
-const chatService = require('./ChatService').getService()
+
 
 function IgnorePromise(promise) {
     promise.then(()=>{}).catch((e)=>{
@@ -9,7 +9,7 @@ function IgnorePromise(promise) {
 
 
 class Client {
-    constructor(wsconn) {
+    constructor(wsconn, chatService) {
         this.conn = wsconn
         this.islogin = false
         this.nickname = null
@@ -19,6 +19,7 @@ class Client {
         this.lastRequestTime = new Date()
         this.requestCount = 0
         this.exceedTime = 0
+        this.chatService = chatService
 
         this.markAsClose = false
 
@@ -28,7 +29,7 @@ class Client {
                 console.log(`Websocket marked as closed. ${reasonCode}: ${desc}`)
             } else {
                 if (this.islogin) {
-                    chatService.onClose(this)
+                    this.chatService.onClose(this)
                     loginService.logout(this.userid, this.conn.ip)
                 }
                 console.log(`Websocket without mark closed. ${reasonCode}: ${desc}`)
@@ -39,7 +40,7 @@ class Client {
     close(reason) {
         this.markAsClose = true
         if (this.islogin) {
-            chatService.onClose(this, reason)
+            this.chatService.onClose(this, reason)
             loginService.logout(this.userid, this.conn.ip)
         }
         this.conn.close()
@@ -66,7 +67,7 @@ class Client {
                     if (this.userid) {
                         IgnorePromise(loginService.banUserByID(this.userid))
                     }
-                    chatService.banIP(this.conn.ip)
+                    this.chatService.banIP(this.conn.ip)
                     this.close("Kicked due to sending message too frequently.")
                     return
                 }
@@ -101,9 +102,9 @@ class Client {
                     this.userid = user.userid
                     this.username = user.username
                     this.nickname = user.nickname
-                    chatService.onLogin(this)
+                    this.chatService.onLogin(this)
                     this.islogin = true
-                    chatService.onSwitchChannel(this, "main")
+                    this.chatService.onSwitchChannel(this, "main")
                     this.channel = "main"
                     this.sendSysMessage(`Successfully login as ${this.username}`)
                 } catch (e) {
@@ -120,7 +121,7 @@ class Client {
                 j.nickname = this.nickname
                 j.channel = this.channel
                 j.isSysMsg = false
-                chatService.onMessage(j)
+                this.chatService.onMessage(j)
             } else {
                 console.warn("Unknown package type: " + j.type)
             }
