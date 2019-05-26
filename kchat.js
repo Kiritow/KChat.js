@@ -8,9 +8,11 @@ const querystring=require('querystring')
 const WebSocketServer=require('websocket').server
 const chatService=require('./ChatService').getService()
 const loginService=require('./LoginService').getService()
+const logger = require("./LogService").getService()
+
 
 function StaticHandler(request,response,reqPath) {
-    console.log('request path: ' + reqPath)
+    logger.log('request path: ' + reqPath)
     fs.exists(reqPath,(exists)=>{
         if(exists){
             fs.stat(reqPath,(err,stats)=>{
@@ -38,7 +40,7 @@ function StaticHandler(request,response,reqPath) {
 }
 
 let httpServer=http.createServer((request,response)=>{
-    console.log("new http connection: " + request.url)
+    logger.log("new http connection: " + request.url)
     let urlinfo=url.parse(request.url)
     if(urlinfo.path=='/api/register') {
         if(request.method!='POST') {
@@ -91,9 +93,9 @@ let wsServer=new WebSocketServer({
 wsServer.on('request', (request)=> {
     try {
         let conn = request.accept('kchat-v2',request.origin)
-        console.log('Websocket connection accepted.')
+        logger.log('Websocket connection accepted.')
         chatService.handleNewConnection(conn)
     } catch (e) {
-        console.error("Failed to accept websocket connection: " + e)
+        logger.error("Failed to accept websocket connection: " + e)
     }
 })

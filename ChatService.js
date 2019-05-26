@@ -1,10 +1,11 @@
 const databaseService = require("./DatabaseService").getService()
+const logger = require("./LogService").getService()
 const TaskRunner = require('./TaskRunner')
 const Client = require('./Client')
 
 function IgnorePromise(promise) {
     promise.then(()=>{}).catch((e)=>{
-        console.error(`IgnoredPromiseError: ${e}`)
+        logger.error(`IgnoredPromiseError: ${e}`)
     })
 }
 
@@ -25,7 +26,7 @@ class ChatService {
         this.ipCleanRunner = new TaskRunner((blackList) => {
             for (ip in blackList) {
                 if (blackList[ip] < new Date()) {
-                    console.log(`Removed IP: ${ip} from blacklist.`)
+                    logger.log(`Removed IP: ${ip} from blacklist.`)
                     delete blackList[ip]
                 }
             }
@@ -33,7 +34,7 @@ class ChatService {
     }
 
     banIP(ip) {
-        console.log(`Adding IP: ${ip} to blacklist...`)
+        logger.log(`Adding IP: ${ip} to blacklist...`)
         this.ipBlackList[ip] = new Date() + 30 * 60 * 1000  // 30min
     }
 

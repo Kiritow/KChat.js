@@ -2,7 +2,7 @@ const databaseService = require("./DatabaseService").getService()
 
 function IgnorePromise(promise) {
     promise.then(()=>{}).catch((e)=>{
-        console.error(`IgnoredPromiseError: ${e}`)
+        logger.error(`IgnoredPromiseError: ${e}`)
     })
 }
 
@@ -55,7 +55,7 @@ class LoginService {
         try {
             await databaseService.addUser(username, password, nickname, intro || null, enableNow ? 1 : 0)
         } catch (e) {
-            console.error(`Failed to register. ${e}`)
+            logger.error(`Failed to register. ${e}`)
             throw Error("Username already exists.")
         }
     }

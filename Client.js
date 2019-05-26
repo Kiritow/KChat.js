@@ -1,9 +1,11 @@
 const loginService = require("./LoginService").getService()
+const logger = require("./LogService").getService()
+
 
 
 function IgnorePromise(promise) {
     promise.then(()=>{}).catch((e)=>{
-        console.error(`IgnoredPromiseError: ${e}`)
+        logger.error(`IgnoredPromiseError: ${e}`)
     })
 }
 
@@ -26,13 +28,13 @@ class Client {
         this.conn.on('message', this.handleMessageGate)
         this.conn.on('close', (reasonCode, desc) => {
             if (this.markAsClose) {
-                console.log(`Websocket marked as closed. ${reasonCode}: ${desc}`)
+                logger.log(`Websocket marked as closed. ${reasonCode}: ${desc}`)
             } else {
                 if (this.islogin) {
                     this.chatService.onClose(this)
                     loginService.logout(this.userid, this.conn.ip)
                 }
-                console.log(`Websocket without mark closed. ${reasonCode}: ${desc}`)
+                logger.log(`Websocket without mark closed. ${reasonCode}: ${desc}`)
             }
         })
     }
@@ -58,12 +60,17 @@ class Client {
         })
     }
 
+    sendResponse(response) {
+        response.type = "response"
+        this.send(response)
+    }
+
     handleMessageGate(message) {
         now = new Date()
         if(now - this.lastRequestTime <= 1000) {
             if ( ++this.requestCount > 5 ) {
                 if ( ++ this.exceedTime > 3 ) {
-                    console.log("Client kicked because of too many exceed times.")
+                    logger.log("Client kicked because of too many exceed times.")
                     if (this.userid) {
                         IgnorePromise(loginService.banUserByID(this.userid))
                     }
@@ -123,10 +130,10 @@ class Client {
                 j.isSysMsg = false
                 this.chatService.onMessage(j)
             } else {
-                console.warn("Unknown package type: " + j.type)
+                logger.warn("Unknown package type: " + j.type)
             }
         } else {
-            console.log("Getting binary data from client. Kicking...")
+            logger.log("Getting binary data from client. Kicking...")
             this.close()
             return
         }
