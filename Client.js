@@ -60,9 +60,23 @@ class Client {
         })
     }
 
-    sendResponse(response) {
-        response.type = "response"
-        this.send(response)
+    sendResponse(action, code, data) {
+        if (code != 0) {
+            this.send({
+                type: "response",
+                action: action,
+                code: code,
+                err: data
+            })
+        } else {
+            this.send({
+                type: "response",
+                action: action,
+                code: code,
+                err: "success",
+                data: data
+            })
+        }
     }
 
     handleMessageGate(message) {
@@ -95,11 +109,12 @@ class Client {
 
             if(j.type == "handshake") {
                 this.sendSysMessage("Handshake is no longer supported. Use login service instead.")
+                this.sendResponse("login", -100, "Handshake protocol outdated.")
                 this.close()
                 return
             } else if (j.type == "login") {
                 if (j.username == null || j.password == null) {
-                    this.sendSysMessage("Invalid username or password.")
+                    this.sendResponse("login", -1, "invalid username or password")
                     this.close()
                     return
                 }
@@ -113,15 +128,23 @@ class Client {
                     this.islogin = true
                     this.chatService.onSwitchChannel(this, "main")
                     this.channel = "main"
-                    this.sendSysMessage(`Successfully login as ${this.username}`)
+                    logger.log(`${this.username} login success.`)
+                    this.sendResponse("login", 0, {
+                        userid: this.userid,
+                        username: this.username,
+                        nickname: this.nickname,
+                        channel: this.channel
+                    })
                 } catch (e) {
-                    this.sendSysMessage(`Failed to login. ${e.message}`)
+                    logger.log(`${j.usernme} login failed: ${e.message}`)
+                    this.sendResponse("login", -2, "login error.")
                     this.close()
                     return
                 }
             } else if (j.type == "message") {
                 if (!this.islogin) {
                     this.sendSysMessage(`Please login first.`)
+                    this.sendResponse("message", -1, "cannot send before login.")
                     return
                 }
                 j.sender = this.userid

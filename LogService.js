@@ -13,11 +13,12 @@ class LogService {
         this.file = fs.createWriteStream(this.filepath, {
             flags: 'a',
         })
+        this.log("LogService initialized.")
     }
 
     _log(level, msg) {
         let content = `${new Date().toString()} [${level}] ${msg}`
-        this.file.write(content)
+        this.file.write(content + '\n')
         console.log(content)
     }
 

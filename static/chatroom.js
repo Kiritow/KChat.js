@@ -7,6 +7,14 @@ class UIInterface {
 
     }
 
+    onClose() {
+        
+    }
+
+    onLogin(code, data) {
+
+    }
+
     onMessage(message) {
 
     }
@@ -25,9 +33,9 @@ class UIInterface {
 }
 
 class ChatRoom {
-    constructor(serverIP, interface) {
+    constructor(serverIP, uiInterface) {
         this.serverIP = serverIP
-        this.interface = interface
+        this.uiInterface = uiInterface
 
         this.islogin = false
         this.userid = null
@@ -42,7 +50,7 @@ class ChatRoom {
 
     handleOpen() {
         try {
-            this.interface.onConnected()
+            this.uiInterface.onConnected()
         } catch (e) {
             console.log(e)
         }
@@ -52,12 +60,18 @@ class ChatRoom {
         try {
             let j = JSON.parse(ev.data)
             if (j.type == "message") {
-                this.interface.onMessage(j)
+                this.uiInterface.onMessage(j)
             } else if (j.type == "command") {
                 if (j.command == "list_del") {
-                    this.interface.onDelUser(j.uid)
+                    this.uiInterface.onDelUser(j.uid)
                 } else if (j.command == "list_add") {
-                    this.interface.onAddUser(j.uid, j.nickname)
+                    this.uiInterface.onAddUser(j.uid, j.nickname)
+                }
+            } else if(j.type == "response") {
+                if (j.action == "login") {
+                    this.onLogin(j.code, j.code == 0 ? j.data : j.err)
+                } else {
+                    console.log(`Unknown response action: ${j.action}`)
                 }
             } else {
                 console.log(`Unknown message type: ${j.type}`)
@@ -72,15 +86,13 @@ class ChatRoom {
     }
 
     login(username, password) {
-        return new Promise((resolve, reject)=>{
-            if(password.length != 64) {
-                return reject("Invalid password length.")
-            }
-            this.send({
-                type: "login",
-                username: username,
-                password: password
-            })
+        if(password.length != 64) {
+            throw Error("Invalid password length.")
+        }
+        this.send({
+            type: "login",
+            username: username,
+            password: password
         })
     }
 

@@ -26,7 +26,7 @@ class ChatService {
         this.ipCleanRunner = new TaskRunner((blackList) => {
             for (ip in blackList) {
                 if (blackList[ip] < new Date()) {
-                    logger.log(`Removed IP: ${ip} from blacklist.`)
+                    logger.log(`IPCleanRunner: Removed IP ${ip} from blacklist.`)
                     delete blackList[ip]
                 }
             }
@@ -78,8 +78,10 @@ class ChatService {
     }
 
     handleNewConnection(conn) {
+        logger.log(`New connection from ${conn.ip}`)
         if (conn.ip in this.ipBlackList) {
             conn.close()
+            logger.log(`Disconnect due to IP in blacklist: ${conn.ip}`)
             return
         }
         this.connQueue.push(new Client(conn, this))
