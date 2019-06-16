@@ -22,11 +22,8 @@ class DatabaseService {
         this.pool = pool
     }
 
-    async query(sql) {
-        values = new Array()
-        for(let i=1;i<arguments.length;i++) {
-            values.push(arguemtns[i])
-        }
+    async query() {
+        let [sql, ...values] = arguments
         return new Promise((resolve, reject)=>{
             this.pool.query(sql, values, (err, result) => {
                 if (err) {
@@ -38,20 +35,17 @@ class DatabaseService {
         })
     }
 
-    async update(sql) {
-        values = new Array()
-        for(let i=1;i<arguments.length;i++) {
-            values.push(arguemtns[i])
-        }
+    async update() {
+        let [sql, ...values] = arguments
         return new Promise((resolve, reject)=>{
-            this.pool.query(sql, values, (err, result) => {
+            this.pool.query(sql, values, (err, results) => {
                 if (err) {
                     return reject(err)
                 } else {
                     return resolve({
                         insertId: results.insertId,
                         affectedRows: results.affectedRows,
-                        changedRows: reuslts.changedRows
+                        changedRows: results.changedRows
                     })
                 }
             })
@@ -66,14 +60,14 @@ class DatabaseService {
     }
 
     async getUserByName(username) {
-        result = await this.query("select * from user where username = ?", username)
+        let result = await this.query("select * from user where username = ?", username)
         if (result.length < 1) {
             return null
         } else {
             return {
                 userid: result[0].id,
                 username: result[0].username,
-                password: result[0].passwrod,
+                password: result[0].password,
                 nickname: result[0].nickname,
                 accountStatus: result[0].account_status
             }

@@ -14,6 +14,7 @@ function getTime() {
     return y + '-' + m + '-' + d+' '+h+':'+minute+':'+second;
 }
 
+// -------------- 昵称控制 --------------
 function saveNickname() {
     console.log("Saving nickname:"+$("#nickname").val())
     $.cookie('this_nickname',escape($("#nickname").val()),{expires:3})
@@ -28,16 +29,27 @@ function getNickname() {
     }
 }
 
+// ------------- 聊天消息面板控制 -------------
+let max_message_size = 20 // Max message displayed on panel.
+let next_message_display_id = 1
+
 function ClearBar() {
     $("#chat_bar").empty()
     $("#chat_bar").get(0).scrollTop=$("#chat_bar").get(0).scrollHeight;
 }
 
 function AppendToBar(msg) {
-    $("#chat_bar").append("<p><font color=blue>"+getTime()+"</font> "+msg+"</p>")
-    $("#chat_bar").get(0).scrollTop=$("#chat_bar").get(0).scrollHeight;
+    $("#chat_bar").append(`<p id="_msg_${next_message_display_id++}"><font color=blue>${getTime()}</font> ${msg}</p>`)
+    if(next_message_display_id > max_message_size) {
+        // max message size exceed. Remove the first message.
+        $(`#_msg_${next_message_display_id - max_message_size}`).remove()
+    }
+    if ($("#auto_scrolldown").get(0).checked) {
+        $("#chat_bar").get(0).scrollTop=$("#chat_bar").get(0).scrollHeight
+    }
 }
 
+// ------------ 在线列表控制 --------------
 let _xlst=new Array()
 function ListAdd(name) {
     _xlst.push(name)
@@ -68,20 +80,21 @@ function ListDel(name) {
     }
 }
 
-function WSSendJSON(ws,j) {
+// ----------- 旧版本兼容 -------------
+function WSSendJSON(j) {
     chatroom.send(j)
 }
 
 // Send content of $("#msg").val() to channel $("#channel_name").val()
-function WSSendMessage(ws) {
-    WSSendJSON(ws,{type:"message",message:$("#msg").val(),channel:$("#channel_name").val()})
+function WSSendMessage() {
+    WSSendJSON({type:"message",message:$("#msg").val(),channel:$("#channel_name").val()})
 }
 
 
 // This is called and reseted on every response.
 let operation_callback=()=>{}
 let reconnect_timer_id=null
-let reconnect_ws_url="ws://kchat.kiritow.com/websocket"
+let reconnect_ws_url="ws://127.0.0.1/websocket"
 let reconnect_enabled=true
 let chatroom=null
 // Forward declaration
@@ -95,24 +108,6 @@ function wsConnectOfficial() {
 function wsConnectDev() {
     reconnect_ws_url="ws://localhost:8001"
     wsConnect()
-}
-
-function bindCallback(ws) {
-    ws.onclose=function(){
-        
-    }
-    ws.onerror=function() {
-        console.log("onerror")
-        $("#status_bar").text("发生错误.")
-    }
-    ws.onmessage=function(ev) {
-        
-    }
-}
-
-wsConnect = ()=>{
-    console.log(`Connect to server: ${reconnect_ws_url}`)
-    chatroom = new ChatRoom(reconnect_ws_url, new MyUIInterface())
 }
 
 $("#dev_op").click(function(){
@@ -141,15 +136,15 @@ function sendMessage() {
         $("#nickname").attr("disabled","disabled")
         saveNickname()
         console.log("Sending message:"+ $("#msg").val())
-        WSSendJSON(ws, {type:"operation",operation:"nickname_change",newname:$("#nickname").val()})
+        WSSendJSON({type:"operation",operation:"nickname_change",newname:$("#nickname").val()})
     }
 
     if($("#code_op").get(0).checked) {
         console.log(`Sending code message (lang: ${$("#code_lang").val()})...`)
-        WSSendJSON(ws, {type:"message",msgType:"code",codeLang:$("#code_lang").val(),message:$("#msg").val(),channel:$("#channel_name").val()})
+        WSSendJSON({type:"message",msgType:"code",codeLang:$("#code_lang").val(),message:$("#msg").val(),channel:$("#channel_name").val()})
     } else {
         console.log("Sending message:"+ $("#msg").val())
-        WSSendMessage(ws)
+        WSSendMessage()
     }
     $("#msg").val('')
 }
@@ -180,7 +175,7 @@ $("#confirm_nickname").click(function(){
         alert("请填写昵称!")
         return
     }
-    WSSendJSON(ws,{type:"operation",operation:"nickname_change",newname:$("#nickname").val()})
+    WSSendJSON({type:"operation",operation:"nickname_change",newname:$("#nickname").val()})
     saveNickname($("#nickname").val())
     $("#nickname").attr("disabled","disabled")
     $("#confirm_nickname").attr("hidden","hidden")
@@ -226,78 +221,131 @@ $("#confirm_channel").click(function(){
         $("#confirm_channel").attr("hidden","hidden")
         $("#confirm_channel").removeAttr("disabled")
     }
-    WSSendJSON(ws,{type:"operation",operation:"switch_channel",newchannel:$("#channel_name").val()})
+    WSSendJSON({type:"operation",operation:"switch_channel",newchannel:$("#channel_name").val()})
 })
 
+// SHA256
+function hexString(buffer) {
+    const byteArray = new Uint8Array(buffer);
+  
+    const hexCodes = [...byteArray].map(value => {
+      const hexCode = value.toString(16);
+      const paddedHexCode = hexCode.padStart(2, '0');
+      return paddedHexCode;
+    });
+  
+    return hexCodes.join('');
+}
+
+function digestMessage(message) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(message);
+    return window.crypto.subtle.digest('SHA-256', data);
+}
+
+// async
+function getsha256(text) {
+    return new Promise((resolve, reject)=>{
+        digestMessage(text).then(digestValue => {
+            resolve(hexString(digestValue))
+        }).catch((e)=>{
+            reject(e)
+        })
+    })
+}
+
+// UI Interface
 class MyUIInterface extends UIInterface {
     constructor() {
+        super()
 
+        this.auto_reconnect=false
+        this.reconnect_timer=null
+        this.namemap = {}
+
+        $("#login_confirm").click(async ()=>{
+            this.chatroom.login(
+                $("#login_username").val(), 
+                await getsha256($("#login_password").val())
+            )
+        })
     }
 
     onConnected() {
         console.log("onopen")
         $("#status_bar").text("已连接到服务器.")
 
-        console.log("Handshake starts")
-        if(getNickname()==null) {
-            WSSendJSON(ws,{type:"handshake",channel:$("#channel_name").val(),newuser:true})
-            $("#nickname").removeAttr("disabled")
-        } else {
-            WSSendJSON(ws,{type:"handshake",channel:$("#channel_name").val(),newuser:false,nickname:getNickname()})
-            $("#nickname").val(getNickname())
-        }
-        console.log("Handshake sent.")
+        console.log("Connected to server. Please login.")
+        $("#login_username").removeAttr("disabled")
+        $("#login_password").removeAttr("disabled")
+        $("#login_panel").removeAttr("hidden")
+    }
 
-        $("#msg").removeAttr("disabled")
-        $("#send_msg").removeAttr("disabled")
-        $("#change_nickname").removeAttr("disabled")
-        $("#change_channel").removeAttr("disabled")
+    // 登录响应处理. data格式: userid, username, nickname, channel
+    onLogin(code, data) {
+        if(code == 0) {
+            console.log(`successfully login. ${code} ${data}`)
+            $("#msg").removeAttr("disabled")
+            $("#send_msg").removeAttr("disabled")
+            $("#change_nickname").removeAttr("disabled")
+            $("#change_channel").removeAttr("disabled")
+
+            $("#nickname").val(data.nickname)
+
+            $("#login_panel").attr("hidden", "hidden")
+            $("#login_ok_panel_uname").text(data.username)
+            $("#login_ok_panel").removeAttr("hidden")
+            $("#action_panel").removeAttr("hidden")
+        } else {
+            console.log(`failed to login. ${code}`)
+            $("#login_username").val("")
+            $("#login_password").val("")
+            alert("登录失败, 请重新输入用户信息")
+        }
     }
 
     onClose() {
         console.log("onclose")
         $("#status_bar").text("连接已关闭. 5秒后自动重连...")
-        if(reconnect_enabled) {
-            console.log('reconnect enabled.')
-            reconnect_timer_id=setTimeout(()=>{
+        if(this.auto_reconnect) {
+            console.log('auto reconnect enabled.')
+            this.reconnect_timer=setTimeout(()=>{
                 console.log("resetting timer inside timer...")
-                reconnect_timer_id=null
+                this.reconnect_timer=null
                 $("#status_bar").text("重新连接中...")
-                wsConnect()
-                },5000)
-            console.log('reconnect_timer_id: '+reconnect_timer_id)
+                this.chatroom.reset()
+            },5000)
+            console.log(`reconnect_timer_id: ${reconnect_timer_id}`)
+        } else {
+            console.log('auto reconnect disabled.')
         }
+    }
+
+    onAddUser(userid, nickname) {
+        this.namemap[userid] = nickname
+        ListAdd(nickname)
+    }
+
+    onDelUser(userid) {
+        ListDel(this.namemap[userid])
+        delete this.namemap[userid]
+    }
+
+    onClearOnlineList(onlineList) {
+        ListClear()
     }
 
     onMessage(message) {
         let j=message
-        if(j.type=="command"){
-            console.log("Received command : "+j.command)
-            if(j.command=="list_clear"){
-                ListClear()
-            } else if(j.command=="list_add") {
-                ListAdd(j.val)
-            } else if(j.command=="list_fill") {
-                for(let i=0;i<j.val.length;i++) {
-                    ListAdd(j.val[i])
-                }
-            } else if(j.command=="list_del") {
-                ListDel(j.val)
-            } else if(j.command=="list_replace") {
-                ListDel(j.oldval)
-                ListAdd(j.newval)
-            } else {
-                console.log("Unknown command: " + command)
-            }
-        } else if(j.type=="message") {
+        if(j.type=="message") {
             if(j.isSysMsg) {
                 AppendToBar("[系统消息] "+j.message)
             } else if(j.msgType=="code") {
                 codeResult = hljs.highlight(j.codeLang || "plain", j.message, true).value
                 codeResult = codeResult.replace(/(\r\n|\n|\r)/gm, "</p><p>");
-                AppendToBar(j.sender + "的代码消息: <p>" + codeResult + "</p>")
+                AppendToBar(this.namemap[j.sender] + "的代码消息: <p>" + codeResult + "</p>")
             } else {
-                AppendToBar(j.sender + "说: " + j.message)
+                AppendToBar(this.namemap[j.sender] + "说: " + j.message)
             }
         } else if(j.type=="response") {
             console.log("Operation response: " + j.success)
@@ -311,4 +359,10 @@ class MyUIInterface extends UIInterface {
             console.log("Unknown message type: " + j.type)
         }
     }
+}
+
+// onPageLoaded.
+wsConnect = ()=>{
+    console.log(`Connect to server: ${reconnect_ws_url}`)
+    chatroom = new ChatRoom(reconnect_ws_url, new MyUIInterface())
 }

@@ -25,14 +25,16 @@ class Client {
 
         this.markAsClose = false
 
-        this.conn.on('message', this.handleMessageGate)
+        this.conn.on('message', (message) => {
+            this.handleMessageGate(message)
+        })
         this.conn.on('close', (reasonCode, desc) => {
             if (this.markAsClose) {
                 logger.log(`Websocket marked as closed. ${reasonCode}: ${desc}`)
             } else {
                 if (this.islogin) {
                     this.chatService.onClose(this)
-                    loginService.logout(this.userid, this.conn.ip)
+                    loginService.logout(this.userid, this.conn.socket.remoteAddress)
                 }
                 logger.log(`Websocket without mark closed. ${reasonCode}: ${desc}`)
             }
@@ -43,7 +45,7 @@ class Client {
         this.markAsClose = true
         if (this.islogin) {
             this.chatService.onClose(this, reason)
-            loginService.logout(this.userid, this.conn.ip)
+            loginService.logout(this.userid, this.conn.socket.remoteAddress)
         }
         this.conn.close()
     }
@@ -80,7 +82,7 @@ class Client {
     }
 
     handleMessageGate(message) {
-        now = new Date()
+        let now = new Date()
         if(now - this.lastRequestTime <= 1000) {
             if ( ++this.requestCount > 5 ) {
                 if ( ++ this.exceedTime > 3 ) {
@@ -88,18 +90,18 @@ class Client {
                     if (this.userid) {
                         IgnorePromise(loginService.banUserByID(this.userid))
                     }
-                    this.chatService.banIP(this.conn.ip)
+                    this.chatService.banIP(this.conn.socket.remoteAddress)
                     this.close("Kicked due to sending message too frequently.")
                     return
                 }
                 this.sendSysMessage("You are sending message too frequently. Slow it please.")
             }
             this.lastRequestTime = now
-            return handleMessage(message)
+            return this.handleMessage(message)
         } else {
             this.requestCount = 1
             this.lastRequestTime = now
-            return handleMessage(message)
+            return this.handleMessage(message)
         }
     }
 
@@ -120,7 +122,7 @@ class Client {
                 }
 
                 try {
-                    user = await loginService.login(j.username, j.password, this.conn.ip)
+                    let user = await loginService.login(j.username, j.password, this.conn.socket.remoteAddress)
                     this.userid = user.userid
                     this.username = user.username
                     this.nickname = user.nickname
@@ -152,6 +154,17 @@ class Client {
                 j.channel = this.channel
                 j.isSysMsg = false
                 this.chatService.onMessage(j)
+            } else if (j.type == "operation") {
+                if (j.operation == "switch_channel") {
+                    try {
+                        this.chatService.onSwitchChannel(this, j.newchannel)
+                        this.channel = j.newchannel
+                    } catch (e) {
+                        console.log(`Unable to switch channel: ${e}`)
+                    }
+                } else {
+                    console.log(`Unknown operation: ${j.operation}`)
+                }
             } else {
                 logger.warn("Unknown package type: " + j.type)
             }

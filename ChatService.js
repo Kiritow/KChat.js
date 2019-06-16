@@ -78,15 +78,16 @@ class ChatService {
     }
 
     handleNewConnection(conn) {
-        logger.log(`New connection from ${conn.ip}`)
-        if (conn.ip in this.ipBlackList) {
+        logger.log(`New connection from ${conn.socket.remoteAddress}`)
+        if (conn.socket.remoteAddress in this.ipBlackList) {
             conn.close()
-            logger.log(`Disconnect due to IP in blacklist: ${conn.ip}`)
+            logger.log(`Disconnect due to IP in blacklist: ${conn.socket.remoteAddress}`)
             return
         }
         this.connQueue.push(new Client(conn, this))
     }
 
+    // 当登录成功后转移状态
     onLogin(client) {
         for(let i=0; i<this.connQueue.length;i++) {
             if (client == this.connQueue[i]) {
@@ -114,7 +115,7 @@ class ChatService {
             leaveMessage = `${client.nickname} 离开了.`
         }
 
-        sendToChannel(client.channel, {
+        this.sendToChannel(client.channel, {
             type: "message",
             isSysMsg: true,
             message: leaveMessage
@@ -127,7 +128,7 @@ class ChatService {
             message.channel,
             message.message.toString()
         ))
-        sendToChannel(message.channel)
+        this.sendToChannel(message.channel, message)
     }
 
     onSwitchChannel(client, toChannel) {
@@ -154,6 +155,10 @@ class ChatService {
                 type: "message",
                 isSysMsg: true,
                 message: `${client.nickname} 加入了频道.`
+            },
+            {
+                type: "command",
+                command: "list_clear"
             },
             {
                 type: "command",

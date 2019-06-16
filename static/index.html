@@ -14,32 +14,50 @@
         </div>
         <div class="container">
             <div class="bigtitle">
-            <h1>K-Chat (开发中)</h1>
+            <h1>K-Chat</h1>
             </div>
             
             <div class="chat_bar scrollable" id="chat_bar">
             </div>
+
             <div class="chat_container">
-                <p><input type="text" id="nickname" placeholder="在此输入你的昵称" disabled></p>
-                <p><textarea id="msg" placeholder="在此输入文字消息" disabled></textarea>
-                    <input type="checkbox" id="code_op">代码消息</p>
-                    <select id="code_lang">
-                        <option value="plain">PlainText</option>
-                        <option value="cpp">C++</option>
-                        <option value="js">JavaScript</option>
-                        <option value="python">Python</option>
-                    </select>
-                </p>
-                <p><input id="send_msg" type="button" value="发送" disabled> 
-                    <input id="send_on_enter" type="checkbox" checked> Enter键发送
-                </p>
-                <p><input id="change_nickname" type="button" value="修改昵称" disabled>
-                    <input id="confirm_nickname" type="button" value="确认昵称" hidden>
-                </p>
-                <p>Channel: <input id="channel_name" type="text" value="main" disabled>
-                    <input id="change_channel" type="button" value="修改频道" disabled>
-                    <input id="confirm_channel" type="button" value="进入频道" hidden>
-                </p>
+                <div id="action_panel" hidden>
+                    <p>
+                        <input type="text" id="nickname" placeholder="在此输入你的昵称" disabled>
+                        <input id="change_nickname" type="button" value="修改昵称" disabled>
+                        <input id="confirm_nickname" type="button" value="确认昵称" hidden>
+                    </p>
+                    <p>
+                        <textarea id="msg" placeholder="在此输入文字消息" disabled></textarea>
+                        <select id="code_lang">
+                            <option value="plain">PlainText</option>
+                            <option value="cpp">C++</option>
+                            <option value="js">JavaScript</option>
+                            <option value="python">Python</option>
+                        </select>
+                        <input type="checkbox" id="code_op">代码消息</p>
+                    </p>
+                    <p><input id="send_msg" type="button" value="发送" disabled> 
+                        <input id="send_on_enter" type="checkbox" checked> Enter键发送
+                    </p>
+                    <p>Channel: <input id="channel_name" type="text" value="main" disabled>
+                        <input id="change_channel" type="button" value="修改频道" disabled>
+                        <input id="confirm_channel" type="button" value="进入频道" hidden>
+                    </p>
+
+                    <p><input id="auto_scrolldown" type="checkbox" checked>自动滚动</p>
+                </div>
+
+                <div id="login_panel" hidden>
+                    <p>登录</p>
+                    <p>用户名: <input id="login_username" placeholder="在此输入用户名"></p>
+                    <p>密码: <input id="login_password" placeholder="在此输入密码"></p>
+                    <p><input id="login_confirm" type="button" value="登录"></p>
+                </div>
+
+                <div id="login_ok_panel" hidden>
+                    <p>已登录为<span id="login_ok_panel_uname"></span></p>
+                </div>
             </div>
         </div>
     </span>

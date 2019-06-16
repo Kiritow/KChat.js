@@ -27,6 +27,10 @@ class UIInterface {
 
     }
 
+    onClearOnlineList() {
+
+    }
+
     onFlushOnlineList(onlineList) {
 
     }
@@ -34,23 +38,47 @@ class UIInterface {
 
 class ChatRoom {
     constructor(serverIP, uiInterface) {
+        console.log(`ChatRoom initialized with ${serverIP}, ${uiInterface}`)
+        console.log(uiInterface)
         this.serverIP = serverIP
         this.uiInterface = uiInterface
+        uiInterface.chatroom = this
 
+        this.reset()
+    }
+
+    reset() {
         this.islogin = false
         this.userid = null
         this.username = null
         this.nickname = null
         this.channel = null
 
+        try {
+            // If this function is called in onclose, avoid twice call.
+            this.ws.onclose=null
+        } catch (e) {
+            console.log(e)
+        }
+
         this.ws = new WebSocket(this.serverIP, "kchat-v2")
-        this.ws.onopen = this.handleOpen
-        this.ws.onmessage = this.handleMessage
+        // Use bind to avoid undefined.
+        this.ws.onopen = this.handleOpen.bind(this)
+        this.ws.onmessage = this.handleMessage.bind(this)
+        this.ws.onclose = this.handleClose.bind(this)
     }
 
     handleOpen() {
         try {
             this.uiInterface.onConnected()
+        } catch (e) {
+            console.log(e)
+        }
+    }
+
+    handleClose() {
+        try {
+            this.uiInterface.onClose()
         } catch (e) {
             console.log(e)
         }
@@ -66,10 +94,14 @@ class ChatRoom {
                     this.uiInterface.onDelUser(j.uid)
                 } else if (j.command == "list_add") {
                     this.uiInterface.onAddUser(j.uid, j.nickname)
+                } else if (j.command == "list_clear") {
+                    this.uiInterface.onClearOnlineList()
+                } else {
+                    console.log(`Unknown command: ${j.command}`)
                 }
             } else if(j.type == "response") {
                 if (j.action == "login") {
-                    this.onLogin(j.code, j.code == 0 ? j.data : j.err)
+                    this.uiInterface.onLogin(j.code, j.code == 0 ? j.data : j.err)
                 } else {
                     console.log(`Unknown response action: ${j.action}`)
                 }

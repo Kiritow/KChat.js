@@ -1,4 +1,5 @@
 const databaseService = require("./DatabaseService").getService()
+const logger = require("./LogService").getService()
 
 function IgnorePromise(promise) {
     promise.then(()=>{}).catch((e)=>{
@@ -19,7 +20,7 @@ class LoginService {
     }
 
     async login(username, password, connip) {
-        user = await databaseService.getUserByName(username)
+        let user = await databaseService.getUserByName(username)
         if(user == null || user.password != password) {
             throw Error("Incorect username of password.")
         }
@@ -30,7 +31,7 @@ class LoginService {
         } else if (user.accountStatus == 3) {
             throw Error("Account is permanently banned from login.")
         }
-        IgnorePromise(databaseService.addUserHistory(user.id, 1, connip))
+        IgnorePromise(databaseService.addUserHistory(user.userid, 1, connip))
         delete user.password
         return user
     }
