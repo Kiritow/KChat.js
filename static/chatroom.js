@@ -145,4 +145,13 @@ class ChatRoom {
             codeLang: language
         })
     }
+
+    sendImageMessage(content) {
+        this.send({
+            type: "message",
+            message: content,
+            sendTime: new Date(),
+            msgType: "image"
+        })
+    }
 }

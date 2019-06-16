@@ -60,7 +60,7 @@ html, body {
 }
 
 .chat_bar{
-    height: 40%;
+    height: 50%;
     width: 100%;
     min-height: 200px;
     overflow-y: auto;

@@ -160,6 +160,34 @@ $("#msg").on('keypress',function(ev){
     }
 })
 
+// ------------- 图片发送 --------------
+function arrayBufferToBase64(buffer) {
+    let binary = '';
+    let bytes = new Uint8Array(buffer);
+    let len = bytes.byteLength;
+    for (let i = 0; i < len; i++) {
+        binary += String.fromCharCode(bytes[i]);
+    }
+    return window.btoa(binary);
+}
+
+$("#send_file").on('change', () => {
+    let file = $("#send_file").get(0).files[0]
+    console.log(file)
+    if (file) {
+        let file_type = file.type
+        let reader = new FileReader()
+        reader.onload = function() {
+            let buffer = reader.result
+            let content = `data:${file_type};base64,${arrayBufferToBase64(buffer)}`
+            chatroom.sendImageMessage(content)
+        }
+        reader.readAsArrayBuffer(file)
+    } else {
+        console.log("no file selected.")
+    }
+})
+
 $("#change_nickname").click(function(){
     $("#msg").attr("disabled","disabled")
     $("#send_msg").attr("disabled","disabled")
@@ -344,6 +372,9 @@ class MyUIInterface extends UIInterface {
                 codeResult = hljs.highlight(j.codeLang || "plain", j.message, true).value
                 codeResult = codeResult.replace(/(\r\n|\n|\r)/gm, "</p><p>");
                 AppendToBar(this.namemap[j.sender] + "的代码消息: <p>" + codeResult + "</p>")
+            } else if (j.msgType=="image") {
+                console.log("Received image message.")
+                AppendToBar(this.namemap[j.sender] + ": " + `<img src="${j.message}">`)
             } else {
                 AppendToBar(this.namemap[j.sender] + "说: " + j.message)
             }

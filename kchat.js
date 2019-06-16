@@ -87,7 +87,9 @@ httpServer.listen(8001)
 
 let wsServer=new WebSocketServer({
     httpServer: httpServer,
-    autoAcceptConnections: false
+    autoAcceptConnections: false,
+    maxReceivedFrameSize: 50 * 1024 * 1024, // 50MB
+    maxReceivedMessageSize: 50 * 1024 * 1024 // 50MB
 })
 
 wsServer.on('request', (request)=> {
