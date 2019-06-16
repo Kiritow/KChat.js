@@ -50,11 +50,13 @@ class ChatService {
         if (!channelClients) return
         for (let i=0; i<channelClients.length; i++) {
             if (client == channelClients[i]) {
+                console.log(`Remove client ${client.userid} from channel ${channel}`)
                 channelClients.splice(i, 1)
                 break
             }
         }
         if (channelClients.length < 1) {
+            console.log(`Deleting channel: ${channel}`)
             delete this.channels[channel]
         }
     }
@@ -135,6 +137,8 @@ class ChatService {
         if (toChannel.startsWith('_')) {
             throw Error("Cannot switch channel.")
         }
+
+        // 通知源频道
         let fromChannel = client.channel
         this.removeClientFromChannel(client, fromChannel)
         this.sendManyToChannel(fromChannel, [
@@ -149,6 +153,26 @@ class ChatService {
                 uid: client.userid
             }
         ])
+
+        // 更新这个客户端的在线列表
+        client.send({
+            type: "command",
+            command: "list_clear",
+        })
+        let channelClients = this.channels[toChannel]
+        if (channelClients) {
+            for (let i=0; i<channelClients.length; i++) {
+                client.send({
+                    type: "command",
+                    command: "list_add",
+                    uid: channelClients[i].userid,
+                    nickname: channelClients[i].nickname,
+                    intro: channelClients[i].intro
+                })
+            }
+        }
+
+        // 将客户端加入到目标频道, 通知.
         this.addClientToChannel(client, toChannel)
         this.sendManyToChannel(toChannel, [
             {
@@ -158,13 +182,10 @@ class ChatService {
             },
             {
                 type: "command",
-                command: "list_clear"
-            },
-            {
-                type: "command",
                 command: "list_add",
                 uid: client.userid,
-                nickname: client.nickname
+                nickname: client.nickname,
+                intro: client.intro
             }
         ])
     }

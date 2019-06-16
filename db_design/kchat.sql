@@ -36,7 +36,7 @@ create table `chat_record` (
     `id` int(11) not null auto_increment comment '自增ID',
     `user_id` int(11) not null comment '用户ID',
     `channel` varchar(128) not null comment '消息频道',
-    `content` varchar(3000) default '' comment '消息内容',
+    `content` longtext comment '消息内容',
     `create_time` timestamp not null default current_timestamp comment '创建时间',
     primary key (`id`)
 );

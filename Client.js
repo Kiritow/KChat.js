@@ -126,6 +126,7 @@ class Client {
                     this.userid = user.userid
                     this.username = user.username
                     this.nickname = user.nickname
+                    this.intro = user.intro
                     this.chatService.onLogin(this)
                     this.islogin = true
                     this.chatService.onSwitchChannel(this, "main")

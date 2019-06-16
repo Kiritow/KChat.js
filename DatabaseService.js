@@ -69,6 +69,7 @@ class DatabaseService {
                 username: result[0].username,
                 password: result[0].password,
                 nickname: result[0].nickname,
+                intro: result[0].intro,
                 accountStatus: result[0].account_status
             }
         }

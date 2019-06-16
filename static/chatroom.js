@@ -19,7 +19,7 @@ class UIInterface {
 
     }
 
-    onAddUser(userid, nickname) {
+    onAddUser(userid, nickname, intro) {
     
     }
 
@@ -38,8 +38,7 @@ class UIInterface {
 
 class ChatRoom {
     constructor(serverIP, uiInterface) {
-        console.log(`ChatRoom initialized with ${serverIP}, ${uiInterface}`)
-        console.log(uiInterface)
+        console.log(`ChatRoom initialized with ${serverIP}`)
         this.serverIP = serverIP
         this.uiInterface = uiInterface
         uiInterface.chatroom = this
@@ -93,7 +92,7 @@ class ChatRoom {
                 if (j.command == "list_del") {
                     this.uiInterface.onDelUser(j.uid)
                 } else if (j.command == "list_add") {
-                    this.uiInterface.onAddUser(j.uid, j.nickname)
+                    this.uiInterface.onAddUser(j.uid, j.nickname, j.intro)
                 } else if (j.command == "list_clear") {
                     this.uiInterface.onClearOnlineList()
                 } else {

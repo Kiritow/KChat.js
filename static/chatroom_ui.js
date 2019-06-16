@@ -29,6 +29,32 @@ function getNickname() {
     }
 }
 
+$("#change_nickname").click(function(){
+    $("#msg").attr("disabled","disabled")
+    $("#send_msg").attr("disabled","disabled")
+    $("#nickname").removeAttr("disabled")
+    $("#change_nickname").attr("hidden","hidden")
+    $("#confirm_nickname").removeAttr("hidden")
+
+    $("#change_channel").attr("disabled","disabled")
+})
+
+$("#confirm_nickname").click(function(){
+    if($("#nickname").val()== null || $("#nickname").val()=='') {
+        console.log("请填写昵称!")
+        return
+    }
+    WSSendJSON({type:"operation",operation:"nickname_change",newname:$("#nickname").val()})
+    saveNickname($("#nickname").val())
+    $("#nickname").attr("disabled","disabled")
+    $("#confirm_nickname").attr("hidden","hidden")
+    $("#change_nickname").removeAttr("hidden")
+    $("#msg").removeAttr("disabled")
+    $("#send_msg").removeAttr("disabled")
+
+    $("#change_channel").removeAttr("disabled")
+})
+
 // ------------- 聊天消息面板控制 -------------
 let max_message_size = 20 // Max message displayed on panel.
 let next_message_display_id = 1
@@ -50,34 +76,35 @@ function AppendToBar(msg) {
 }
 
 // ------------ 在线列表控制 --------------
-let _xlst=new Array()
-function ListAdd(name) {
-    _xlst.push(name)
-    if(name!=null) {
-        $("#online_tab").append("<p>"+name+"</p>")
-    } else {
-        $("#online_tab").append("<p>&ltNoname&gt</p>")
+let _xlst={}
+function ListAdd(id, name, intro) {
+    console.log(`ListAdd ${id} ${name} ${intro}`)
+
+    _xlst[id] = {
+        name: name,
+        intro: intro
     }
+
+    $("#online_tab").append(`<p id="_utab_${id}"></p>`)
+    $(`#_utab_${id}`).text(name || "Noname")
+
+    $(`#_utab_${id}`).on('mouseover', ()=>{
+        $(`#_utab_${id}`).text(intro)
+    })
+    $(`#_utab_${id}`).on('mouseout', ()=>{
+        $(`#_utab_${id}`).text(name || "Noname")
+    })
 }
 
 function ListClear() {
-    _xlst=new Array()
+    console.log("List clear")
+    _xlst={}
     $("#online_tab").empty()
 }
 
-function ListDel(name) {
-    let idx=_xlst.indexOf(name)
-    if(idx!=-1) {
-        _xlst.splice(idx,1)
-        $("#online_tab").empty()
-        $.each(_xlst,function(idx,name){
-            if(name!=null) {
-                $("#online_tab").append("<p>"+name+"</p>")
-            } else {
-                $("#online_tab").append("<p>&ltNoname&gt</p>")
-            }
-        })
-    }
+function ListDel(id) {
+    console.log(`List delete ${id}`)
+    $(`#_utab_${id}`).remove()
 }
 
 // ----------- 旧版本兼容 -------------
@@ -94,7 +121,7 @@ function WSSendMessage() {
 // This is called and reseted on every response.
 let operation_callback=()=>{}
 let reconnect_timer_id=null
-let reconnect_ws_url="ws://127.0.0.1/websocket"
+let reconnect_ws_url=`ws://${window.location.host}/websocket`
 let reconnect_enabled=true
 let chatroom=null
 // Forward declaration
@@ -128,7 +155,7 @@ $("#dev_op").click(function(){
 
 function sendMessage() {
     if($("#nickname").val()== null || $("#nickname").val()=='') {
-        alert("请填写昵称!")
+        console.log("请填写昵称!")
         return
     }
 
@@ -188,32 +215,7 @@ $("#send_file").on('change', () => {
     }
 })
 
-$("#change_nickname").click(function(){
-    $("#msg").attr("disabled","disabled")
-    $("#send_msg").attr("disabled","disabled")
-    $("#nickname").removeAttr("disabled")
-    $("#change_nickname").attr("hidden","hidden")
-    $("#confirm_nickname").removeAttr("hidden")
-
-    $("#change_channel").attr("disabled","disabled")
-})
-
-$("#confirm_nickname").click(function(){
-    if($("#nickname").val()== null || $("#nickname").val()=='') {
-        alert("请填写昵称!")
-        return
-    }
-    WSSendJSON({type:"operation",operation:"nickname_change",newname:$("#nickname").val()})
-    saveNickname($("#nickname").val())
-    $("#nickname").attr("disabled","disabled")
-    $("#confirm_nickname").attr("hidden","hidden")
-    $("#change_nickname").removeAttr("hidden")
-    $("#msg").removeAttr("disabled")
-    $("#send_msg").removeAttr("disabled")
-
-    $("#change_channel").removeAttr("disabled")
-})
-
+// ------------- 频道切换 ---------------
 let old_channel_name=''
 
 $("#change_channel").click(function(){
@@ -252,34 +254,9 @@ $("#confirm_channel").click(function(){
     WSSendJSON({type:"operation",operation:"switch_channel",newchannel:$("#channel_name").val()})
 })
 
-// SHA256
-function hexString(buffer) {
-    const byteArray = new Uint8Array(buffer);
-  
-    const hexCodes = [...byteArray].map(value => {
-      const hexCode = value.toString(16);
-      const paddedHexCode = hexCode.padStart(2, '0');
-      return paddedHexCode;
-    });
-  
-    return hexCodes.join('');
-}
-
-function digestMessage(message) {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(message);
-    return window.crypto.subtle.digest('SHA-256', data);
-}
-
-// async
+// ------------- SHA256 ---------------
 function getsha256(text) {
-    return new Promise((resolve, reject)=>{
-        digestMessage(text).then(digestValue => {
-            resolve(hexString(digestValue))
-        }).catch((e)=>{
-            reject(e)
-        })
-    })
+    return sjcl.codec.hex.fromBits(sjcl.hash.sha256.hash(text))
 }
 
 // UI Interface
@@ -287,15 +264,17 @@ class MyUIInterface extends UIInterface {
     constructor() {
         super()
 
-        this.auto_reconnect=false
+        this.auto_reconnect=true
         this.reconnect_timer=null
         this.namemap = {}
 
-        $("#login_confirm").click(async ()=>{
+        $("#login_confirm").click(()=>{
+            console.log("login button clicked.")
             this.chatroom.login(
                 $("#login_username").val(), 
-                await getsha256($("#login_password").val())
+                getsha256($("#login_password").val())
             )
+            console.log("login call finished.")
         })
     }
 
@@ -328,7 +307,7 @@ class MyUIInterface extends UIInterface {
             console.log(`failed to login. ${code}`)
             $("#login_username").val("")
             $("#login_password").val("")
-            alert("登录失败, 请重新输入用户信息")
+            console.log("登录失败, 请重新输入用户信息")
         }
     }
 
@@ -349,17 +328,17 @@ class MyUIInterface extends UIInterface {
         }
     }
 
-    onAddUser(userid, nickname) {
+    onAddUser(userid, nickname, intro) {
         this.namemap[userid] = nickname
-        ListAdd(nickname)
+        ListAdd(userid, nickname, intro)
     }
 
     onDelUser(userid) {
-        ListDel(this.namemap[userid])
+        ListDel(userid)
         delete this.namemap[userid]
     }
 
-    onClearOnlineList(onlineList) {
+    onClearOnlineList() {
         ListClear()
     }
 
@@ -395,5 +374,10 @@ class MyUIInterface extends UIInterface {
 // onPageLoaded.
 wsConnect = ()=>{
     console.log(`Connect to server: ${reconnect_ws_url}`)
+    console.log(reconnect_ws_url)
     chatroom = new ChatRoom(reconnect_ws_url, new MyUIInterface())
+}
+
+window.onload = function () {
+    wsConnect()
 }
