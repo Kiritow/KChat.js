@@ -7,3 +7,6 @@ node_modules/
 # Private database configure
 dbconfig.json
 config/dbconfig.json
+
+# IDE
+.vscode/
