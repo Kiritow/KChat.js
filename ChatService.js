@@ -106,7 +106,7 @@ class ChatService {
         for(let i=0; i<this.onlineQueue.length; i++) {
             if (client == this.onlineQueue[i]) {
                 this.onlineQueue.splice(i, 1)
-                return
+                break
             }
         }
 
@@ -117,11 +117,17 @@ class ChatService {
             leaveMessage = `${client.nickname} 离开了.`
         }
 
-        this.sendToChannel(client.channel, {
-            type: "message",
-            isSysMsg: true,
-            message: leaveMessage
-        })
+        this.sendManyToChannel(client.channel, [
+            {
+                type: "message",
+                isSysMsg: true,
+                message: leaveMessage
+            }, {
+                type: "command",
+                command: "list_del",
+                uid: client.userid
+            }
+        ])
     }
 
     onMessage(message) {
@@ -188,6 +194,8 @@ class ChatService {
                 intro: client.intro
             }
         ])
+
+        logger.info(`Client ${client.userid} switched from ${fromChannel} to ${toChannel}`)
     }
 }
 

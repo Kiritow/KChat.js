@@ -80,20 +80,25 @@ let _xlst={}
 function ListAdd(id, name, intro) {
     console.log(`ListAdd ${id} ${name} ${intro}`)
 
-    _xlst[id] = {
-        name: name,
-        intro: intro
-    }
+    if (id in _xlst) {
+        _xlst[id].count++
+        $(`#_utab_${id}`).text(`${name || "Noname"} (${_xlst[id].count})`)
+    } else {
+        _xlst[id] = {
+            name: name,
+            intro: intro,
+            count: 1
+        }
 
-    $("#online_tab").append(`<p id="_utab_${id}"></p>`)
-    $(`#_utab_${id}`).text(name || "Noname")
-
-    $(`#_utab_${id}`).on('mouseover', ()=>{
-        $(`#_utab_${id}`).text(intro)
-    })
-    $(`#_utab_${id}`).on('mouseout', ()=>{
+        $("#online_tab").append(`<p id="_utab_${id}"></p>`)
         $(`#_utab_${id}`).text(name || "Noname")
-    })
+        $(`#_utab_${id}`).on('mouseover', ()=>{
+            $(`#_utab_${id}`).text(`>> ${intro}`)
+        })
+        $(`#_utab_${id}`).on('mouseout', ()=>{
+            $(`#_utab_${id}`).text(`${name || "Noname"} (${_xlst[id].count})`)
+        })
+    }
 }
 
 function ListClear() {
@@ -104,7 +109,14 @@ function ListClear() {
 
 function ListDel(id) {
     console.log(`List delete ${id}`)
-    $(`#_utab_${id}`).remove()
+    if(id in _xlst) {
+        if(_xlst[id].count > 1) {
+            _xlst[id].count--
+        } else {
+            $(`#_utab_${id}`).remove()
+            delete _xlst[id]
+        }
+    }
 }
 
 // ----------- 旧版本兼容 -------------
@@ -348,7 +360,7 @@ class MyUIInterface extends UIInterface {
             if(j.isSysMsg) {
                 AppendToBar("[系统消息] "+j.message)
             } else if(j.msgType=="code") {
-                codeResult = hljs.highlight(j.codeLang || "plain", j.message, true).value
+                let codeResult = hljs.highlight(j.codeLang || "plain", j.message, true).value
                 codeResult = codeResult.replace(/(\r\n|\n|\r)/gm, "</p><p>");
                 AppendToBar(this.namemap[j.sender] + "的代码消息: <p>" + codeResult + "</p>")
             } else if (j.msgType=="image") {

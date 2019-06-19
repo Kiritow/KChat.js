@@ -28,17 +28,18 @@ class Client {
         this.conn.on('message', (message) => {
             this.handleMessageGate(message)
         })
-        this.conn.on('close', (reasonCode, desc) => {
+        this.conn.on('close', function (reasonCode, desc) {
             if (this.markAsClose) {
                 logger.log(`Websocket marked as closed. ${reasonCode}: ${desc}`)
             } else {
                 if (this.islogin) {
+                    logger.log("Calling chatService onClose...")
                     this.chatService.onClose(this)
                     loginService.logout(this.userid, this.conn.socket.remoteAddress)
                 }
                 logger.log(`Websocket without mark closed. ${reasonCode}: ${desc}`)
             }
-        })
+        }.bind(this))
     }
 
     close(reason) {
